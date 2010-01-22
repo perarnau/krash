@@ -3,7 +3,7 @@
  * Contact: firstname.lastname@imag.fr
  *
  *
- * This program migrates is a first attempt to code the setup
+ * This program is a first attempt to code the setup
  * code from KRASH in C.
  * The setup is supposed to do the following, having root priviledges:
  *	- migrate all tasks under root in a new /all_tasks CPU control group,
@@ -65,9 +65,6 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 	cgroup_get_task_end(&handle);
-
-
-	/* set myself as a root task */
 
 	return 0;
 }
