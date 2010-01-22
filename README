@@ -1,0 +1,50 @@
+##############################################################
+# Kernel for Reproduction and Analysis of System Heterogeneity
+#
+# Author : Swann Perarnau
+# Contact : firstname.lastname@imag.fr
+##############################################################
+
+Some things to now :
+####################
+
+You need to mount the cgroup virtual filesystems, at least the cpu and cpuset ones.
+
+The profile file : a sample is provided, it should be sufficient for simple use of the injector.
+	It contains several configuration options, and the profile of the injection.
+	the config options are simple :
+		name=... contain the name of the control groups, if unsure do not modify
+		mount=... contain the mount point of the vfs ( the same as in mount_groups script).
+	the profile :
+		0 { ... } is the profile for cpuid 0 ( same as /proc/cpuinfo number)
+		0 .. is an event : at this time (relative to the beginning of the injection) the following share of the cpu will be burned.
+		between two events the share is constant.
+		WARNING :  	always define times in full format : time 0 is 0 not 00 or 00:00 or whatever.
+				event 0 is mandatory
+
+Install notes :
+###############
+
+The Makefile contained in the src directory should be enough if you met the requirements.
+
+For any other serious error, please contact us.
+
+Requirements :
+###############
+
+	-- Linux kernel version 2.6.24 or above compiled with CONFIG_FAIR_CGROUP_SCHED and CONFIG_FAIR_GROUP_SCHED options
+	-- libcgroup, any version available on debian should be enough
+	-- autotools
+	-- Root access to your machine.
+
+Using KRASH :
+#############
+
+Edit profile according to your needs :
+	vi profile
+
+Run krash
+	sudo ./krash
+
+Currently the only way to stop krash is by killing it. The SIGINT  signal is interpreted as
+a stop command and clean the system of any load.
