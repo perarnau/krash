@@ -18,7 +18,7 @@
  *  Contact: firstname.lastname@imag.fr
  */
 
- /*
+/*
  * This program is a first attempt to code the setup
  * code from KRASH in C.
  * The setup is supposed to do the following, having root priviledges:
@@ -30,20 +30,33 @@
 
 #include<stdio.h>
 #include<stdlib.h>
+#include<getopt.h>
 #include<libcgroup.h>
 
+#include "config.h"
 
-int main(int argc, char **argv)
+
+/* Arguments parsing variables */
+static int ask_help = 0;
+static int verbose = 0;
+static char* profile = NULL;
+static struct option long_options[] = {
+	{ "help", no_argument, &ask_help, 1 },
+	{ "verbose", no_argument, &verbose, 1 },
+	{ "profile", required_argument, NULL, 'p' },
+	{ 0,0,0,0 },
+};
+
+static const char short_opts[] = "hvp:";
+
+/* Setup code for krash */
+int setup()
 {
 	char *all_tasks_name = "alltasks";
 	struct cgroup *alltasks;
 	void *handle = NULL;
 	pid_t pid;
 	int err;
-	/*
-	char *burners_prefix = "burner.";
-	int loaded_cpus = 16;
-	*/
 
 	/* init cgroup library */
 	err = cgroup_init();
@@ -81,6 +94,33 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 	cgroup_get_task_end(&handle);
+}
 
+int main(int argc, char **argv)
+{
+	int c,err;
+	int option_index = 0;
+
+	while(1)
+	{
+		c = getopt_long(argc, argv, short_opts,long_options, &option_index);
+		if(c == -1)
+			break;
+
+		switch(c)
+		{
+			case 'v':
+			case 'h':
+			case 0:
+				break;
+			case 'p':
+				profile = optarg;
+				break;
+			case '?':
+			default:
+				exit(1);
+		}
+	}
+	setup();
 	return 0;
 }
