@@ -124,12 +124,14 @@ int main(int argc, char **argv)
 	}
 	//setup();
 	ActionList *l = new ActionList();
-	l->add_action(new CPUAction(std::string("0"),0,0,50));
-	l->add_action(new CPUAction(std::string("10"),10,0,50));
-	l->add_action(new CPUAction(std::string("100"),100,0,50));
-	l->add_action(new CPUAction(std::string("20"),20,0,50));
-	l->add_action(new CPUAction(std::string("50"),50,0,50));
-	l->add_action(new CPUAction(std::string("40"),40,0,50));
+	l->add_action(new CPUAction(std::string("cpu0"),0,0,50));
+	l->add_action(new CPUAction(std::string("cpu1"),0,1,50));
+	l->add_action(new CPUAction(std::string("cpu0"),10,0,50));
+	l->add_action(new CPUAction(std::string("cpu0"),100,0,50));
+	l->add_action(new CPUAction(std::string("cpu2"),100,2,50));
+	l->add_action(new CPUAction(std::string("cpu0"),20,0,50));
+	l->add_action(new CPUAction(std::string("cpu0"),50,0,50));
+	l->add_action(new CPUAction(std::string("cpu0"),40,0,50));
 	l->start();
 	return 0;
 }

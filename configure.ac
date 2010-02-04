@@ -19,6 +19,8 @@ AC_LANG(C++)
 AC_PROG_CXX
 #check for libcgroup
 AC_CHECK_LIB([cgroup],[cgroup_init],[],AC_MSG_ERROR("could not find the cgroup library"))
+#check for libev
+AC_CHECK_LIB([ev],[ev_loop],[],AC_MSG_ERROR("could not find the ev library"))
 
 #DX_HTML_FEATURE(ON)
 #DX_CHM_FEATURE(OFF)

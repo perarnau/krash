@@ -23,6 +23,8 @@
 
 #include<string>
 #include<queue>
+#include<ev++.h>
+
 /** Defines an action.
  * This class represents an action to execute at some point in time.
  *
@@ -54,7 +56,7 @@ class Action {
 		}
 
 		/** virtual method for the activation of an action */
-		virtual void activate() const { };
+		virtual void activate() { };
 
 	protected:
 		/** Time, since the beginning of KRASH, at which this action must
@@ -124,10 +126,24 @@ class ActionList {
 
 		/** start the action handling, launching the event loop **/
 		void start();
-	private:
 
+		/** callback needed by the ev lib */
+		void timer_callback(ev::timer &w, int revents);
+	private:
 		/** the list of actions, sorted by increasing times */
 		std::priority_queue<Action*, std::vector<Action*>, gt_pointers > list;
+
+		/** the event loop */
+		struct ev::default_loop *loop;
+
+		/** a timer watcher */
+		ev::timer *watcher;
+
+		/** the start time of the loop
+		 * This is needed because ev handle timers
+		 * in absolute time
+		 */
+		ev::tstamp start_time;
 };
 
 
