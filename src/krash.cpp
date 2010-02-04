@@ -52,7 +52,7 @@ static const char short_opts[] = "hvp:";
 /* Setup code for krash */
 int setup()
 {
-	char *all_tasks_name = "alltasks";
+	char all_tasks_name[] = "alltasks";
 	struct cgroup *alltasks;
 	void *handle = NULL;
 	pid_t pid;
@@ -77,7 +77,8 @@ int setup()
 	cgroup_create_cgroup_from_parent(alltasks,0);
 
 	/* migrate all tasks, using task walking functions */
-	err = cgroup_get_task_begin(NULL,"cpu",&handle,&pid);
+	char cpugroup[] = "cpu";
+	err = cgroup_get_task_begin(NULL,cpugroup,&handle,&pid);
 	if(err)
 	{
 		fprintf(stderr,"Error: %s\n",cgroup_strerror(err));
