@@ -34,7 +34,7 @@
 #include<libcgroup.h>
 
 #include "config.h"
-
+#include "actions.hpp"
 
 /* Arguments parsing variables */
 static int ask_help = 0;
@@ -122,6 +122,14 @@ int main(int argc, char **argv)
 				exit(1);
 		}
 	}
-	setup();
+	//setup();
+	ActionList *l = new ActionList();
+	l->add_action(new CPUAction(std::string("0"),0,0,50));
+	l->add_action(new CPUAction(std::string("10"),10,0,50));
+	l->add_action(new CPUAction(std::string("100"),100,0,50));
+	l->add_action(new CPUAction(std::string("20"),20,0,50));
+	l->add_action(new CPUAction(std::string("50"),50,0,50));
+	l->add_action(new CPUAction(std::string("40"),40,0,50));
+	l->start();
 	return 0;
 }
