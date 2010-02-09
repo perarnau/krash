@@ -17,6 +17,11 @@ AM_INIT_AUTOMAKE([-Wall -Werror gnu])
 # check for programs
 AC_LANG(C++)
 AC_PROG_CXX
+# profile parser needs C, lex and yacc
+AC_PROG_LEX
+AM_PROG_LEX
+AC_PROG_YACC
+
 #check for libcgroup
 AC_CHECK_LIB([cgroup],[cgroup_init],[],AC_MSG_ERROR("could not find the cgroup library"))
 #check for libev
