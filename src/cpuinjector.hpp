@@ -28,13 +28,24 @@
 #define CPU_CGROUP_NAME "cpu"
 #define CPUSET_CGROUP_NAME "cpuset"
 
+/** saves all configuration needed by the cpuinjector */
+void cpuinjector_configure(std::string cpu_cg_root,std::string cpuset_cg_root,std::string all_name,std::string cg_basename,unsigned int all_prio);
 
 /** moves all tasks present on cpu_cgroup_root
  * to a group one level below
- * @param cpu_cgroup_root the cpu control group root under which we will work
- * @param alltasks_name the name given to the alltasks group
  */
-int setup_system(std::string cpu_cgroup_root, std::string alltasks_name);
+int setup_system();
+
+
+/** setup a cpu: create a group for the burner and fork it */
+int setup_cpu(unsigned int cpuid);
+
+/** apply a share to a cpu
+ * @param cpuid the cpuid to manipulate
+ * @param share the share to apply
+ */
+int apply_share(unsigned int cpuid, unsigned int share);
+
 
 
 #endif // !CPUINJECTOR_HPP

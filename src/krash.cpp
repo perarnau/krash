@@ -97,7 +97,8 @@ int main(int argc, char **argv) {
 	}
 
 	/** setup the system */
-	err = setup_system(std::string("/"),std::string("alltasks"));
+	cpuinjector_configure(std::string("/"),std::string("/"),std::string("alltasks"),std::string("krash"),1024);
+	err = setup_system();
 	if(err) {
 		std::cerr << "Error during sytem setup, aborting..." << std::endl;
 		exit(EXIT_FAILURE);
