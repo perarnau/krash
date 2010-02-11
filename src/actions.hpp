@@ -23,7 +23,6 @@
 
 #include<string>
 #include<queue>
-#include<ev++.h>
 
 /** Defines an action.
  * This class represents an action to execute at some point in time.
@@ -79,6 +78,8 @@ struct gt_pointers : std::binary_function <Action*, Action*, bool> {
 	}
 };
 
+typedef std::priority_queue<Action*, std::vector<Action*>, gt_pointers> ActionsList;
+
 /** CPU Injector action class
  *
  * This class specializes Action for the CPU Injector in KRASH.
@@ -112,39 +113,6 @@ class CPUAction : public Action {
 		unsigned int load;
 };
 
-/** Contains a list of Actions
- *
- * This class handles a list of actions and the event loop code to activate KRASH componants when needed.
- */
-class ActionList {
-	public:
-		/** basic constructor */
-		ActionList();
-
-		/** add an action to the list */
-		void add_action(Action* a);
-
-		/** start the action handling, launching the event loop **/
-		void start();
-
-		/** callback needed by the ev lib */
-		void timer_callback(ev::timer &w, int revents);
-	private:
-		/** the list of actions, sorted by increasing times */
-		std::priority_queue<Action*, std::vector<Action*>, gt_pointers > list;
-
-		/** the event loop */
-		struct ev::default_loop *loop;
-
-		/** a timer watcher */
-		ev::timer *watcher;
-
-		/** the start time of the loop
-		 * This is needed because ev handle timers
-		 * in absolute time
-		 */
-		ev::tstamp start_time;
-};
 
 
 #endif // ACTIONS_HPP
