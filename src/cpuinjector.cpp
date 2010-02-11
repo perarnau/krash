@@ -9,16 +9,9 @@
 #endif
 #include <sched.h> // for affinity
 
+CPUInjector *MainCPUInjector;
 
-/* static variables to easier save some general info on groups */
-static std::string cpu_cgroup_root;
-static std::string cpuset_cgroup_root;
-static std::string alltasks_groupname;
-static std::string cgroups_basename;
-static unsigned int alltasks_priority;
-static std::set<std::pair<unsigned int, pid_t> > active_cpus;
-
-void cpuinjector_configure(std::string cpu_cg_root,std::string cpuset_cg_root,std::string all_name,std::string cg_basename,unsigned int all_prio) {
+CPUInjector::CPUInjector(std::string cpu_cg_root,std::string cpuset_cg_root,std::string all_name,std::string cg_basename,unsigned int all_prio) {
 	cpu_cgroup_root = cpu_cg_root;
 	cpuset_cgroup_root = cpuset_cg_root;
 	alltasks_groupname = all_name;
@@ -26,7 +19,32 @@ void cpuinjector_configure(std::string cpu_cg_root,std::string cpuset_cg_root,st
 	alltasks_priority = all_prio;
 }
 
-int setup_system() {
+int CPUInjector::setup(ActionsList& list) {
+	int err;
+	err = setup_system();
+	if(err) {
+		return err;
+	}
+	/* we need to copy the list for its inspection */
+	ActionsList copy(list);
+	std::set<unsigned int> cpus;
+	while(!list.empty()) {
+		Action *a = list.top();
+		if(a->get_id().find(CPU_CGROUP_NAME) != std::string::npos) {
+			CPUAction *ca = (CPUAction *)a;
+			cpus.insert(ca->get_cpu());
+		}
+	}
+	/* iterate through cpus to setup them */
+	std::set<unsigned int>::iterator it;
+	for(it = cpus.begin(); it != cpus.end(); it++) {
+		setup_cpu(*it);
+	}
+	return 0;
+}
+
+
+int CPUInjector::setup_system() {
 	struct cgroup *alltasks;
 	void *handle = NULL;
 	pid_t pid;
@@ -73,7 +91,7 @@ int setup_system() {
 	return 0;
 }
 
-int setup_cpu(unsigned int cpuid) {
+int CPUInjector::setup_cpu(unsigned int cpuid) {
 	/* what we need to do:
 	 * - create a cpu control group
 	 * - fork a process
@@ -124,7 +142,7 @@ int setup_cpu(unsigned int cpuid) {
 	return 0;
 }
 
-int apply_share(unsigned int cpuid, unsigned int share) {
+int CPUInjector::apply_share(unsigned int cpuid, unsigned int share) {
 	/* what we need to do
 	 * - know the priority of the alltask group
 	 * - compute the priority to apply to a given cpu group

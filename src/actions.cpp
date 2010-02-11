@@ -45,14 +45,6 @@ CPUAction::CPUAction(unsigned int time, unsigned int cpu, unsigned int load) : A
 	this->id += itos(cpu);
 }
 
-inline unsigned int CPUAction::get_cpu() {
-	return this->cpu;
-}
-
-inline unsigned int CPUAction::get_load() {
-	return this->load;
-}
-
 void CPUAction::activate() {
 	std::cout << "Activated: my cpu: " << get_cpu() << " my id: " << get_id() << std::endl;
 }

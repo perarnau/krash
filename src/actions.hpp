@@ -102,10 +102,10 @@ class CPUAction : public Action {
 		CPUAction(unsigned int time, unsigned int cpu, unsigned int load);
 
 		/** gets the cpuid */
-		inline unsigned int get_cpu();
+		inline unsigned int get_cpu() { return this->cpu; }
 
 		/** gets the load */
-		inline unsigned int get_load();
+		inline unsigned int get_load() { return this->load; }
 
 		/** applies a load on the target cpu
 		 * Using the load and cpu members, this function applies

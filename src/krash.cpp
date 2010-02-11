@@ -95,17 +95,18 @@ int main(int argc, char **argv) {
 		std::cerr << "Error while parsing " << profile_file << ",aborting..." << std::endl;
 		exit(EXIT_FAILURE);
 	}
+	ActionsList *list = driver->get_actions();
 
 	/** setup the system */
-	cpuinjector_configure(std::string("/"),std::string("/"),std::string("alltasks"),std::string("krash"),1024);
-	err = setup_system();
+	CPUInjector *inj = new CPUInjector(std::string("/"),std::string("/"),std::string("alltasks"),std::string("krash"),1024);
+	MainCPUInjector = inj;
+	err = inj->setup(*list);
 	if(err) {
 		std::cerr << "Error during sytem setup, aborting..." << std::endl;
 		exit(EXIT_FAILURE);
 	}
 
 	/* launch the event driver with the parsed actions */
-	ActionsList *list = driver->get_actions();
 	EventDriver e(*list);
 	e.start(); // DO NOT RETURN
 	return 0;
