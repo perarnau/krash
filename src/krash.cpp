@@ -18,16 +18,6 @@
  *  Contact: firstname.lastname@imag.fr
  */
 
-/*
- * This program is a first attempt to code the setup
- * code from KRASH in C.
- * The setup is supposed to do the following, having root priviledges:
- *	- migrate all tasks under root in a new /all_tasks CPU control group,
- *	- create a number of control groups depending on the number of
- *	CPUs to load,
- *	- set itself as a task under root group
- */
-
 #include <cstdlib>
 #include <getopt.h>
 #include <iostream>
@@ -44,7 +34,7 @@ static int verbose = 0;
 static char* profile = NULL;
 static struct option long_options[] = {
 	{ "help", no_argument, &ask_help, 1 },
-	{ "verbose", no_argument, &verbose, 1 },
+//	{ "verbose", no_argument, &verbose, 1 },
 	{ "profile", required_argument, NULL, 'p' },
 	{ 0,0,0,0 },
 };
