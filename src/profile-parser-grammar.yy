@@ -15,55 +15,36 @@
 *
 *   Copyright Swann Perarnau, 2008
 */
-/** Bison C++ interface, see the bison doc for info */
-%skeleton "lalr1.cc"
-%defines
-%define parser_class_name "ProfileParser"
-/*%define namespace "krash::parser"*/
-
-%code requires {
+%{
 #include <string>
+#include <iostream>
 #include "actions.hpp"
-class ProfileParserDriver;
+
+extern void yyerror(ActionsList* l, std::string msg) {
+	std::cerr << msg << std::endl;
 }
 
-%parse-param { ProfileParserDriver& driver }
-%lex-param { ProfileParserDriver& driver } 
+int yylex(void);
 
-%locations
-%initial-action {
-	//initialize the initial location
-	@$.begin.filename = @$.end.filename = &driver.file;
-}
+/* variables for actions */
+int cpu;
 
-%debug
+%}
+
+%parse-param { ActionsList* list }
+
 %error-verbose
 
-// Symbols
-%union {
-	Action *a;
-}
-
-%code {
-#include "profile-parser-driver.hpp"
-}
-
-%token TOKMOUNT TOKMODE TOKNAME TOKCPU TOKPROFILE EQUAL TIME NUMBER WORD PATH OBRACK CBRACK;
+%token TOKCPU TOKPROFILE
+%token NUMBER
+%token OBRACK CBRACK;
 %%
 config:
 	cpu_config
 	;
 
 cpu_config:
-	TOKCPU OBRACK name_assign mount_assign profile CBRACK
-	;
-
-name_assign:
-	TOKNAME EQUAL WORD
-	;
-
-mount_assign:
-	TOKMOUNT EQUAL WORD 
+	TOKCPU OBRACK profile CBRACK
 	;
 
 profile:
@@ -75,7 +56,7 @@ cpuid_profiles:
 	;
 
 cpuid_profile:
-	NUMBER  OBRACK event_list CBRACK
+	NUMBER { cpu = $1; } OBRACK event_list CBRACK
 	;
 
 event_list:
@@ -83,9 +64,8 @@ event_list:
 	;
 
 event:
-	TIME NUMBER 
+	NUMBER NUMBER
+	{ CPUAction *a = new CPUAction($1,cpu,$2); list->push(a); }
 	;
 %%
-void yy::ProfileParser::error(const yy::ProfileParser::location_type &l, const std::string& m) {
-	driver.error(l,m);
-}
+
