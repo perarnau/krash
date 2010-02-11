@@ -35,6 +35,7 @@
 
 #include "config.h"
 #include "actions.hpp"
+#include "events.hpp"
 #include "profile-parser-driver.hpp"
 
 /* Arguments parsing variables */
@@ -124,15 +125,14 @@ int main(int argc, char **argv)
 		}
 	}
 	//setup();
-	ActionList *l = new ActionList();
-	l->add_action(new CPUAction(std::string("cpu0"),0,0,50));
-	l->add_action(new CPUAction(std::string("cpu1"),0,1,50));
-	l->add_action(new CPUAction(std::string("cpu0"),10,0,50));
-	l->add_action(new CPUAction(std::string("cpu0"),100,0,50));
-	l->add_action(new CPUAction(std::string("cpu2"),100,2,50));
-	l->add_action(new CPUAction(std::string("cpu0"),20,0,50));
-	l->add_action(new CPUAction(std::string("cpu0"),50,0,50));
-	l->add_action(new CPUAction(std::string("cpu0"),40,0,50));
-	l->start();
+
+	/* read the profile and parse it */
+	ParserDriver *driver = new ParserDriver(std::string(profile));
+	driver->parse();
+
+	/* launch the event driver with the parsed actions */
+	ActionsList *list = driver->get_actions();
+	EventDriver e(*list);
+	e.start(); // DO NOT RETURN
 	return 0;
 }
