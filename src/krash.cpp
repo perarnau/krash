@@ -36,6 +36,7 @@
 #include "actions.hpp"
 #include "events.hpp"
 #include "profile-parser-driver.hpp"
+#include "cpuinjector.hpp"
 
 /* Arguments parsing variables */
 static int ask_help = 0;
@@ -76,7 +77,7 @@ int main(int argc, char **argv)
 				exit(1);
 		}
 	}
-	//setup();
+	setup_system(std::string("/"),std::string("alltasks"));
 
 	/* read the profile and parse it */
 	ParserDriver *driver = new ParserDriver(std::string(profile));

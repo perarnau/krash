@@ -32,7 +32,7 @@ int setup_system(std::string cpu_cgroup_root, std::string alltasks_name) {
 	err = cgroup_get_task_begin(NULL,cpugroup,&handle,&pid);
 	if(err)
 	{
-		std::cerr << "Error: " << group_strerror(err) << std::endl;
+		std::cerr << "Error: " << cgroup_strerror(err) << std::endl;
 		exit(EXIT_FAILURE);
 	}
 	do
@@ -42,7 +42,7 @@ int setup_system(std::string cpu_cgroup_root, std::string alltasks_name) {
 	while((err = cgroup_get_task_next(&handle,&pid)) == 0);
 	if(err != ECGEOF)
 	{
-		std::cerr << "Error: " << group_strerror(err) << std::endl;
+		std::cerr << "Error: " << cgroup_strerror(err) << std::endl;
 		exit(EXIT_FAILURE);
 	}
 	cgroup_get_task_end(&handle);
