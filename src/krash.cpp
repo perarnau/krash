@@ -31,7 +31,6 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include<getopt.h>
-#include<libcgroup.h>
 
 #include "config.h"
 #include "actions.hpp"
@@ -51,53 +50,6 @@ static struct option long_options[] = {
 
 static const char short_opts[] = "hvp:";
 
-/* Setup code for krash */
-int setup()
-{
-	char all_tasks_name[] = "alltasks";
-	struct cgroup *alltasks;
-	void *handle = NULL;
-	pid_t pid;
-	int err;
-
-	/* init cgroup library */
-	err = cgroup_init();
-	if(err != 0)
-	{
-		fprintf(stderr,"Init Failed: %s\n",cgroup_strerror(err));
-		exit(EXIT_FAILURE);
-	}
-
-	/* create the /alltasks group */
-	alltasks = cgroup_new_cgroup(all_tasks_name);
-	if(!alltasks)
-		return 1;
-
-	cgroup_add_controller(alltasks,"cpu");
-	cgroup_add_controller(alltasks,"cpuset");
-
-	cgroup_create_cgroup_from_parent(alltasks,0);
-
-	/* migrate all tasks, using task walking functions */
-	char cpugroup[] = "cpu";
-	err = cgroup_get_task_begin(NULL,cpugroup,&handle,&pid);
-	if(err)
-	{
-		fprintf(stderr,"Error: %s\n",cgroup_strerror(err));
-		exit(EXIT_FAILURE);
-	}
-	do
-	{
-		cgroup_attach_task_pid(alltasks,pid);
-	}
-	while((err = cgroup_get_task_next(&handle,&pid)) == 0);
-	if(err != ECGEOF)
-	{
-		fprintf(stderr,"Error: %s\n",cgroup_strerror(err));
-		exit(EXIT_FAILURE);
-	}
-	cgroup_get_task_end(&handle);
-}
 
 int main(int argc, char **argv)
 {
