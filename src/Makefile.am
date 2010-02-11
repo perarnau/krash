@@ -1,4 +1,4 @@
-AM_CFLAGS= -g -O2 -Wall -Werror -ansi -pedantic
+AM_CFLAGS= -g -O0 -Wall -Werror -ansi -pedantic
 AM_YFLAGS = -d
 bin_PROGRAMS = krash 
 krash_SOURCES = profile-parser-grammar.yy profile-parser-lex.ll profile-parser-driver.cpp krash.cpp actions.cpp events.cpp utils.cpp cpuinjector.cpp

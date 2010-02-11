@@ -2,6 +2,7 @@
 #include "utils.hpp"
 #include <libcgroup.h>
 #include <cstdlib>
+#include <cstring>
 #include <iostream>
 #include <set>
 #ifndef _GNU_SOURCE
@@ -17,6 +18,16 @@ CPUInjector::CPUInjector(std::string cpu_cg_root,std::string cpuset_cg_root,std:
 	alltasks_groupname = all_name;
 	cgroups_basename = cg_basename;
 	alltasks_priority = all_prio;
+}
+
+/* helper function for cgroup errors */
+static void cg_error(unsigned int errno) {
+	if(errno == ECGOTHER) {
+		std::cerr << "Error: " << strerror(cgroup_get_last_errno()) << std::endl;
+	}
+	else {
+		std::cerr << "Init Failed: " << cgroup_strerror(errno) << std::endl;
+	}
 }
 
 int CPUInjector::setup(ActionsList& list) {
@@ -52,9 +63,9 @@ int CPUInjector::setup_system() {
 
 	/* init cgroup library */
 	err = cgroup_init();
-	if(err != 0)
+	if(err)
 	{
-		std::cerr << "Init Failed: " << cgroup_strerror(err) << std::endl;
+		cg_error(err);
 		exit(EXIT_FAILURE);
 	}
 
@@ -69,22 +80,24 @@ int CPUInjector::setup_system() {
 	cgroup_create_cgroup_from_parent(alltasks,0);
 
 	/* migrate all tasks, using task walking functions */
-	char cpugroup[] = CPU_CGROUP_NAME;
-	err = cgroup_get_task_begin(NULL,cpugroup,&handle,&pid);
-	if(err)
-	{
-		std::cerr << "Error: " << cgroup_strerror(err) << std::endl;
+	// ok libcgroup is stupid so I need to pass it a char* and I
+	// only have a const char*, lets do stupid things !
+	err = cgroup_get_task_begin(&cpu_cgroup_root[0],CPU_CGROUP_NAME,&handle,&pid);
+	if(err) {
+		if(err == ECGEOF)
+			return 0;
+		cg_error(err);
 		exit(EXIT_FAILURE);
 	}
-	do
-	{
+
+	do {
 		cgroup_attach_task_pid(alltasks,pid);
 		// TODO: skip getpid()
+
 	}
 	while((err = cgroup_get_task_next(&handle,&pid)) == 0);
-	if(err != ECGEOF)
-	{
-		std::cerr << "Error: " << cgroup_strerror(err) << std::endl;
+	if(err != ECGEOF) {
+		cg_error(err);
 		exit(EXIT_FAILURE);
 	}
 	cgroup_get_task_end(&handle);
@@ -108,12 +121,12 @@ int CPUInjector::setup_cpu(unsigned int cpuid) {
 	}
 	int err;
 	if(cgroup_add_controller(burner,CPU_CGROUP_NAME) == NULL) {
-		std::cerr << "Error: " << cgroup_strerror(err) << std::endl;
+		cg_error(err);
 		return 1;
 	}
 	err = cgroup_create_cgroup_from_parent(burner,0);
 	if(err) {
-		std::cerr << "Error: " << cgroup_strerror(err) << std::endl;
+		cg_error(err);
 		return 1;
 	}
 
@@ -132,7 +145,7 @@ int CPUInjector::setup_cpu(unsigned int cpuid) {
 	/* attach pid to the burner group */
 	err = cgroup_attach_task_pid(burner,burner_pid);
 	if(err) {
-		std::cerr << "Error: " << cgroup_strerror(err) << std::endl;
+		cg_error(err);
 		// TODO: clean allocated structures and processes
 		return 1;
 	}
