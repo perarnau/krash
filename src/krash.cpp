@@ -35,6 +35,7 @@
 
 #include "config.h"
 #include "actions.hpp"
+#include "profile-parser-driver.hpp"
 
 /* Arguments parsing variables */
 static int ask_help = 0;
