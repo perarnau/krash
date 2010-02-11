@@ -94,6 +94,13 @@ class CPUAction : public Action {
 		 */
 		CPUAction(std::string id, unsigned int time, unsigned int cpu, unsigned int load);
 
+		/** Basic constructor
+		 * @param time the time to activate this action.
+		 * @param cpu the cpu to load in this action.
+		 * @param load the load to inflict in this action.
+		 */
+		CPUAction(unsigned int time, unsigned int cpu, unsigned int load);
+
 		/** gets the cpuid */
 		inline unsigned int get_cpu();
 
