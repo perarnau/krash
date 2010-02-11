@@ -29,7 +29,9 @@ ParserDriver::ParserDriver(std::string file) {
 }
 
 int ParserDriver::parse() {
+	scan_begin();
 	return yyparse(this->list);
+	scan_end();
 }
 
 ActionsList* ParserDriver::get_actions() {
