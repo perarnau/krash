@@ -28,9 +28,9 @@
  *	- set itself as a task under root group
  */
 
-#include<stdio.h>
-#include<stdlib.h>
-#include<getopt.h>
+#include <cstdlib>
+#include <getopt.h>
+#include <iostream>
 
 #include "config.h"
 #include "actions.hpp"
@@ -51,9 +51,16 @@ static struct option long_options[] = {
 
 static const char short_opts[] = "hvp:";
 
+void print_usage() {
+	std::cerr << "krash: a CPU load Injector" << std::endl;
+	std::cerr << "usage: krash [options]" << std::endl;
+	std::cerr << "options:" << std::endl;
+	std::cerr << "-p/--profile: file to use as profile." << std::endl;
+	std::cerr << "-h/--help:    print this usage." << std::endl;
+	std::cerr << "-v/--verbose: verbose mode." << std::endl;
+}
 
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv) {
 	int c,err;
 	int option_index = 0;
 
@@ -77,11 +84,34 @@ int main(int argc, char **argv)
 				exit(1);
 		}
 	}
-	setup_system(std::string("/"),std::string("alltasks"));
+
+	if(ask_help) {
+		print_usage();
+		exit(129);
+	}
 
 	/* read the profile and parse it */
-	ParserDriver *driver = new ParserDriver(std::string(profile));
-	driver->parse();
+	std::string profile_file;
+	if(profile == NULL) {
+		profile_file = "profile";
+	}
+	else {
+		profile_file = profile;
+	}
+
+	ParserDriver *driver = new ParserDriver(profile_file);
+	err = driver->parse();
+	if(err) {
+		std::cerr << "Error while parsing " << profile_file << ",aborting..." << std::endl;
+		exit(EXIT_FAILURE);
+	}
+
+	/** setup the system */
+	err = setup_system(std::string("/"),std::string("alltasks"));
+	if(err) {
+		std::cerr << "Error during sytem setup, aborting..." << std::endl;
+		exit(EXIT_FAILURE);
+	}
 
 	/* launch the event driver with the parsed actions */
 	ActionsList *list = driver->get_actions();
