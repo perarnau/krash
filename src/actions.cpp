@@ -20,7 +20,7 @@
 
 #include "actions.hpp"
 #include "utils.hpp"
-
+#include "cpuinjector.hpp"
 /** for debug purpose only */
 #include<iostream>
 
@@ -47,6 +47,7 @@ CPUAction::CPUAction(unsigned int time, unsigned int cpu, unsigned int load) : A
 
 void CPUAction::activate() {
 	std::cout << "Activated: my cpu: " << get_cpu() << " my id: " << get_id() << std::endl;
+	MainCPUInjector->apply_share(get_cpu(),get_load());
 }
 
 

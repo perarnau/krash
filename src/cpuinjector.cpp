@@ -9,6 +9,19 @@
 #define _GNU_SOURCE // need by sched.h
 #endif
 #include <sched.h> // for affinity
+#include <sys/types.h>
+
+/* helper macro for cgroup errors */
+#define cg_error(errno) {	\
+	if(errno == 0) {	\
+		std::cerr << "Internal Error: called error handling on good condition, report this bug !" << " File: " << __FILE__ << ":" << __LINE__ << std::endl;	\
+	} else if(errno == ECGOTHER) {	\
+		std::cerr << "Error: " << strerror(cgroup_get_last_errno())<< " File: " << __FILE__ << ":" << __LINE__<< std::endl;	\
+	}	\
+	else {	\
+		std::cerr << "Error: " << cgroup_strerror(errno)<< " File: " << __FILE__ << ":" << __LINE__<< std::endl;	\
+	}	\
+}
 
 CPUInjector *MainCPUInjector;
 
@@ -20,15 +33,6 @@ CPUInjector::CPUInjector(std::string cpu_cg_root,std::string cpuset_cg_root,std:
 	alltasks_priority = all_prio;
 }
 
-/* helper function for cgroup errors */
-static void cg_error(unsigned int errno) {
-	if(errno == ECGOTHER) {
-		std::cerr << "Error: " << strerror(cgroup_get_last_errno()) << std::endl;
-	}
-	else {
-		std::cerr << "Init Failed: " << cgroup_strerror(errno) << std::endl;
-	}
-}
 
 int CPUInjector::setup(ActionsList& list) {
 	int err;
@@ -39,17 +43,22 @@ int CPUInjector::setup(ActionsList& list) {
 	/* we need to copy the list for its inspection */
 	ActionsList copy(list);
 	std::set<unsigned int> cpus;
-	while(!list.empty()) {
-		Action *a = list.top();
+	while(!copy.empty()) {
+		Action *a = copy.top();
 		if(a->get_id().find(CPU_CGROUP_NAME) != std::string::npos) {
 			CPUAction *ca = (CPUAction *)a;
 			cpus.insert(ca->get_cpu());
 		}
+		copy.pop();
 	}
 	/* iterate through cpus to setup them */
 	std::set<unsigned int>::iterator it;
 	for(it = cpus.begin(); it != cpus.end(); it++) {
-		setup_cpu(*it);
+		err = setup_cpu(*it);
+		if(err) {
+			std::cerr << "Error: failed to init cpu "<< *it << std::endl;
+			exit(EXIT_FAILURE);
+		}
 	}
 	return 0;
 }
@@ -77,7 +86,11 @@ int CPUInjector::setup_system() {
 
 	cgroup_add_controller(alltasks,CPU_CGROUP_NAME);
 
-	cgroup_create_cgroup_from_parent(alltasks,0);
+	err = cgroup_create_cgroup(alltasks,0);
+	if(err) {
+		cg_error(err);
+		exit(EXIT_FAILURE);
+	}
 
 	/* migrate all tasks, using task walking functions */
 	// ok libcgroup is stupid so I need to pass it a char* and I
@@ -120,14 +133,12 @@ int CPUInjector::setup_cpu(unsigned int cpuid) {
 		return 1;
 	}
 	int err;
-	if(cgroup_add_controller(burner,CPU_CGROUP_NAME) == NULL) {
-		cg_error(err);
-		return 1;
-	}
-	err = cgroup_create_cgroup_from_parent(burner,0);
+	cgroup_add_controller(burner,CPU_CGROUP_NAME);
+
+	err = cgroup_create_cgroup(burner,0);
 	if(err) {
 		cg_error(err);
-		return 1;
+		exit(EXIT_FAILURE);
 	}
 
 	/* fork a burner process */
@@ -161,5 +172,48 @@ int CPUInjector::apply_share(unsigned int cpuid, unsigned int share) {
 	 * - compute the priority to apply to a given cpu group
 	 * - apply it
 	 */
+	std::string burner_path = cpu_cgroup_root + cgroups_basename + itos(cpuid);
+	struct cgroup *burner = cgroup_new_cgroup(burner_path.c_str());
+	if(!burner) {
+		return 1;
+	}
+
+	/* get the cgroup, forcing the lib to fill internals with real values */
+	int err;
+	err = cgroup_get_cgroup(burner);
+	if(err) {
+		cg_error(err);
+		exit(EXIT_FAILURE);
+	}
+	/* get the cpu controller */
+	struct cgroup_controller *cg_cpu = cgroup_get_controller(burner,CPU_CGROUP_NAME);
+	if(!cg_cpu)
+		return 1;
+
+
+	/* get the current value */
+	u_int64_t val;
+	err = cgroup_get_value_uint64(cg_cpu,"cpu.shares",&val);
+	if(err) {
+		cg_error(err);
+		exit(EXIT_FAILURE);
+	}
+
+	/* compute share */
+	u_int64_t newprio = val;
+
+	/* set the new value */
+	err = cgroup_set_value_uint64(cg_cpu,"cpu.shares",val);
+	if(err) {
+		cg_error(err);
+		exit(EXIT_FAILURE);
+	}
+
+	/* force lib to rewrite values */
+	err = cgroup_modify_cgroup(burner);
+	if(err) {
+		cg_error(err);
+		exit(EXIT_FAILURE);
+	}
 }
 
