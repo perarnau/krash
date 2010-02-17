@@ -146,10 +146,9 @@ int CPUInjector::setup_system() {
 		goto error_free;
 
 	do {
-		err = cgroup_attach_task_pid(all_cg,pid); // TODO: skip getpid()
-		if(err)
-			goto error_end;
-
+		/* WE MUST SKIP ERRORS HERE, NOT ALL TASKS CAN BE MOVED IF
+		 * OUR ROOT IS THE REAL ROOT */
+		cgroup_attach_task_pid(all_cg,pid); // TODO: skip getpid()
 	}
 	while((err = cgroup_get_task_next(&handle,&pid)) == 0);
 	if(err != ECGEOF)
@@ -159,8 +158,6 @@ end_tasks:
 	cgroup_get_task_end(&handle);
 	return 0;
 
-error_end:
-	cgroup_get_task_end(&handle);
 error_free:
 	// create group already cleans all_cg so just use this to delete the group
 	cgroup_delete_cgroup(all_cg,0);
