@@ -23,17 +23,15 @@
 
 #include "actions.hpp"
 #include <string>
-#include <set>
+#include <map>
+#include <libcgroup.h>
 /** This file is a wrapper around libcgroup */
-
-#define CPU_CGROUP_NAME "cpu"
-#define CPUSET_CGROUP_NAME "cpuset"
 
 
 class CPUInjector {
 	public:
 		/** saves all configuration needed by the cpuinjector */
-		CPUInjector(std::string cpu_cg_root,std::string cpuset_cg_root,std::string all_name,std::string cg_basename,unsigned int all_prio);
+		CPUInjector(std::string cpu_cg_root,std::string cpuset_cg_root,std::string all_name,std::string cg_basename);
 
 		/** do all the setup needed by the cpu injector */
 		int setup(ActionsList& list);
@@ -53,13 +51,17 @@ class CPUInjector {
 		/** setup a cpu: create a group for the burner and fork it */
 		int setup_cpu(unsigned int cpuid);
 
+		/** creates a group, with a given name and cpu.shares value*/
+		int create_group(struct cgroup** ret, std::string name, u_int64_t shares);
+
 		/* static variables to easier save some general info on groups */
 		std::string cpu_cgroup_root;
 		std::string cpuset_cgroup_root;
 		std::string alltasks_groupname;
 		std::string cgroups_basename;
-		unsigned int alltasks_priority;
-		std::set<std::pair<unsigned int, pid_t> > active_cpus;
+		/** register all cgroups manipulated */
+		struct cgroup *all_cg;
+		std::map< unsigned int, struct cgroup*> burners_cgs;
 };
 
 extern CPUInjector *MainCPUInjector;
