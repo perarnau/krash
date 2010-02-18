@@ -50,6 +50,10 @@ void EventDriver::start() {
 	}
 }
 
+void EventDriver::stop() {
+	loop->unloop(ev::ALL);
+}
+
 void EventDriver::timer_callback(ev::timer &w,int revents) {
 	// this callback activate all actions that should
 	// have been activated by the time it get called.

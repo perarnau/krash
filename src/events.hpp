@@ -35,6 +35,10 @@ class EventDriver {
 		/** start the action handling, launching the event loop **/
 		void start();
 
+		/** stops the action handling, effectivelly making the start method
+		 * to return */
+		void stop();
+
 		/** callback needed by the ev lib */
 		void timer_callback(ev::timer &w, int revents);
 	private:
