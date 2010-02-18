@@ -19,11 +19,11 @@
  */
 
 %{
+#include <iostream>
+#include <string>
 #include <cstdlib>
 #include "profile-parser-grammar.h"
 #include "profile-parser-driver.hpp"
-#include <iostream>
-
 	/* Work around an incompatibility in flex (at least versions
 	   2.5.31 through 2.5.33): it generates code that does
 	   not conform to C89.  See Debian bug 333231
@@ -39,11 +39,16 @@
 #[^\n]*	;
 [ \t]+	;
 \n	;
-cpu	return TOKCPU;
-profile	return TOKPROFILE;
-\{	return OBRACK;
-\}	return CBRACK;
-[0-9]+	yylval=std::atoi(yytext); return NUMBER;
+cpu			return TOKCPU;
+profile			return TOKPROFILE;
+cgroup_root		return CGROUP_ROOT;
+all_name		return ALL_NAME;
+burner_basename		return BURNER_BASENAME;
+=			return EQUAL;
+\{			return OBRACK;
+\}			return CBRACK;
+[0-9]+			yylval.num =std::atoi(yytext); return NUMBER;
+[a-zA-z0-9_\-\/\.]+	yylval.id = new std::string(yytext);return ID;
 %%
 void ParserDriver::scan_begin() {
 	if (filename == "-")

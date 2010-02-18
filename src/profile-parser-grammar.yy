@@ -18,8 +18,8 @@
  */
 
 %{
-#include <string>
 #include <iostream>
+#include <string>
 #include "profile.hpp"
 #include "actions.hpp"
 
@@ -38,16 +38,42 @@ int cpu;
 
 %error-verbose
 
+%union{
+	std::string *id;
+	unsigned int num;
+}
+
 %token TOKCPU TOKPROFILE
-%token NUMBER
-%token OBRACK CBRACK;
+%token<num> NUMBER
+%token OBRACK CBRACK EQUAL
+%token<id> ID
+%token CGROUP_ROOT ALL_NAME BURNER_BASENAME
 %%
 config:
 	cpu_config
 	;
 
 cpu_config:
-	TOKCPU OBRACK profile CBRACK
+	TOKCPU OBRACK config profile CBRACK
+	;
+
+config:
+	cpu_root all_name burner_basename
+	;
+
+cpu_root:
+	CGROUP_ROOT EQUAL ID
+	{ p.cpu_cg_root = *$3;}
+	;
+
+all_name:
+	ALL_NAME EQUAL ID
+	{ p.all_cg_name = *$3;}
+	;
+
+burner_basename:
+	BURNER_BASENAME EQUAL ID
+	{ p.burner_cg_basename = *$3;}
 	;
 
 profile:
