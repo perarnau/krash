@@ -20,9 +20,10 @@
 %{
 #include <string>
 #include <iostream>
+#include "profile.hpp"
 #include "actions.hpp"
 
-extern void yyerror(ActionsList* l, std::string msg) {
+extern void yyerror(Profile p, std::string msg) {
 	std::cerr << msg << std::endl;
 }
 
@@ -33,7 +34,7 @@ int cpu;
 
 %}
 
-%parse-param { ActionsList* list }
+%parse-param { Profile p }
 
 %error-verbose
 
@@ -67,7 +68,8 @@ event_list:
 
 event:
 	NUMBER NUMBER
-	{ CPUAction *a = new CPUAction($1,cpu,$2); list->push(a); }
+	{ CPUAction *a = new CPUAction($1,cpu,$2); p.list->push(a); }
+
 	;
 %%
 

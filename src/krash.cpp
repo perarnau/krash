@@ -26,6 +26,7 @@
 #include "actions.hpp"
 #include "events.hpp"
 #include "profile-parser-driver.hpp"
+#include "profile.hpp"
 #include "cpuinjector.hpp"
 
 /* Arguments parsing variables */
@@ -95,19 +96,19 @@ int main(int argc, char **argv) {
 		std::cerr << "Error while parsing " << profile_file << ",aborting..." << std::endl;
 		exit(EXIT_FAILURE);
 	}
-	ActionsList *list = driver->get_actions();
+	Profile p  = driver->profile;
 
 	/** setup the system */
-	CPUInjector *inj = new CPUInjector(std::string("/"),std::string("alltasks"),std::string("krash"));
+	CPUInjector *inj = new CPUInjector(p.cpu_cg_root,p.all_cg_name,p.burner_cg_basename);
 	MainCPUInjector = inj;
-	err = inj->setup(*list);
+	err = inj->setup(*(p.list));
 	if(err) {
 		std::cerr << "Error during sytem setup, aborting..." << std::endl;
 		exit(EXIT_FAILURE);
 	}
 
 	/* launch the event driver with the parsed actions */
-	EventDriver e(*list);
+	EventDriver e(*(p.list));
 	e.start(); // DO NOT RETURN
 	return 0;
 }

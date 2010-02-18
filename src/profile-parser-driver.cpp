@@ -21,19 +21,16 @@
 #include "profile-parser-driver.hpp"
 #include <iostream>
 
-extern int yyparse(ActionsList* list);
+extern int yyparse(Profile p);
 
 ParserDriver::ParserDriver(std::string file) {
 	this->filename = file;
-	this->list = new ActionsList();
 }
 
 int ParserDriver::parse() {
+	int err;
 	scan_begin();
-	return yyparse(this->list);
+	err = yyparse(this->profile);
 	scan_end();
-}
-
-ActionsList* ParserDriver::get_actions() {
-	return this->list;
+	return err;
 }
