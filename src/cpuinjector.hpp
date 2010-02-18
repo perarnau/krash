@@ -42,6 +42,9 @@ class CPUInjector {
 		 */
 		int apply_share(unsigned int cpuid, unsigned int share);
 
+		/** cleanup code: to call before exiting krash, leaves the
+		 * system in a clean state*/
+		int cleanup();
 	private:
 		/** moves all tasks present on cpu_cgroup_root
 		 * to a group one level below
@@ -62,6 +65,7 @@ class CPUInjector {
 		/** register all cgroups manipulated */
 		struct cgroup *all_cg;
 		std::map< unsigned int, struct cgroup*> burners_cgs;
+		std::map< unsigned int, pid_t > burners_pids;
 };
 
 extern CPUInjector *MainCPUInjector;

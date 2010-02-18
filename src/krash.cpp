@@ -48,12 +48,17 @@ void print_usage() {
 	std::cerr << "options:" << std::endl;
 	std::cerr << "-p/--profile: file to use as profile." << std::endl;
 	std::cerr << "-h/--help:    print this usage." << std::endl;
-	std::cerr << "-v/--verbose: verbose mode." << std::endl;
+//	std::cerr << "-v/--verbose: verbose mode." << std::endl;
 }
 
 int main(int argc, char **argv) {
 	int c,err;
 	int option_index = 0;
+	std::string profile_file;
+	ParserDriver *driver;
+	Profile p;
+	CPUInjector *inj = NULL;
+	EventDriver *e;
 
 	while(1)
 	{
@@ -82,7 +87,6 @@ int main(int argc, char **argv) {
 	}
 
 	/* read the profile and parse it */
-	std::string profile_file;
 	if(profile == NULL) {
 		profile_file = "profile";
 	}
@@ -90,25 +94,35 @@ int main(int argc, char **argv) {
 		profile_file = profile;
 	}
 
-	ParserDriver *driver = new ParserDriver(profile_file);
+	driver = new ParserDriver(profile_file);
 	err = driver->parse();
 	if(err) {
 		std::cerr << "Error while parsing " << profile_file << ",aborting..." << std::endl;
-		exit(EXIT_FAILURE);
+		goto error;
 	}
-	Profile p  = driver->profile;
+	p = driver->profile;
 
 	/** setup the system */
-	CPUInjector *inj = new CPUInjector(p.cpu_cg_root,p.all_cg_name,p.burner_cg_basename);
+	inj = new CPUInjector(p.cpu_cg_root,p.all_cg_name,p.burner_cg_basename);
 	MainCPUInjector = inj;
 	err = inj->setup(*(p.list));
 	if(err) {
 		std::cerr << "Error during sytem setup, aborting..." << std::endl;
-		exit(EXIT_FAILURE);
+		goto error;
 	}
 
 	/* launch the event driver with the parsed actions */
-	EventDriver e(*(p.list));
-	e.start(); // DO NOT RETURN
+	e = new EventDriver(*(p.list));
+	e->start(); // DO NOT RETURN
 	return 0;
+
+error:
+	delete driver;
+	if(inj) {
+		err = inj->cleanup();
+		if(err)
+			std::cerr << "Warning: errors occurred during cleanup, you should check for any left over processes or configuration." << std::endl;
+		delete inj;
+	}
+	exit(EXIT_FAILURE);
 }

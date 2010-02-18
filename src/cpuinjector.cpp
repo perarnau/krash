@@ -10,7 +10,9 @@
 #endif
 #include <sched.h> // for affinity
 #include <sys/types.h>
-
+#include <sys/wait.h>
+#include <signal.h>
+#include <errno.h>
 /** variables defining standard names for controllers
  * and control files
  */
@@ -63,6 +65,30 @@ static char CPU_SHARES[] = "cpu.shares";
 		goto label;		\
 	}				\
 }					\
+
+// register something went wrong but don't exit
+#define SAVE_RET(err,ret) if(err) { ret = err; }
+
+// kill and wait a task
+static int kill_wait(pid_t task) {
+	int err;
+	pid_t waited;
+
+	err = kill(task,SIGKILL);
+	if(err)
+		goto error;
+
+	waited = waitpid(task,NULL,0);
+	if(waited == -1) {
+		err = errno;
+		goto error;
+	}
+
+	return 0;
+error:
+	std::cerr << "Error: " << strerror(err) << std::endl;
+	return err;
+}
 
 CPUInjector *MainCPUInjector;
 
@@ -173,6 +199,8 @@ error_free:
 	// create_group() already cleans all_cg so just use this to delete the group
 	cgroup_delete_cgroup(all_cg,0);
 	cgroup_free(&all_cg);
+	// if this fails, we must ensure all_cg is NULL
+	all_cg = NULL;
 error:
 	return err;
 }
@@ -215,7 +243,7 @@ int CPUInjector::setup_cpu(unsigned int cpuid) {
 	return 0;
 
 error_free: // we do not recover from this, too hard
-	//TODO kill burner
+	kill_wait(burner_pid);
 	cgroup_delete_cgroup(burner,0);
 	cgroup_free(&burner);
 error:
@@ -273,4 +301,38 @@ int CPUInjector::apply_share(unsigned int cpuid, unsigned int share) {
 	return 0;
 error:
 	return err;
+}
+
+// we get called with every exit, on success AND on failure
+// so we must check for each component to ensure everything is in good shape
+int CPUInjector::cleanup() {
+	int err;
+	int ret= 0;
+	// cleanup all_cg
+	if(all_cg) {
+		// just delete the group and free the structure
+		// we can't recover from this
+		err = cgroup_delete_cgroup(all_cg,0);
+		SAVE_RET(err,ret);
+		cgroup_free(&all_cg);
+	}
+
+	// cleanup burners
+	std::map<unsigned int, struct cgroup*>::iterator it;
+	for(it = burners_cgs.begin(); it != burners_cgs.end(); it++) {
+		struct cgroup *cg = it->second;
+
+		// find the pid of the burner
+		pid_t burner_pid = burners_pids[it->first];
+
+		// kill and wait him
+		err = kill_wait(burner_pid);
+		SAVE_RET(err,ret);
+
+		// free the structure
+		err = cgroup_delete_cgroup(cg,0);
+		SAVE_RET(err,ret);
+		cgroup_free(&cg);
+	}
+	return ret;
 }
