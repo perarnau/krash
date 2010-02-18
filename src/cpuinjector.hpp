@@ -31,7 +31,7 @@
 class CPUInjector {
 	public:
 		/** saves all configuration needed by the cpuinjector */
-		CPUInjector(std::string cpu_cg_root,std::string cpuset_cg_root,std::string all_name,std::string cg_basename);
+		CPUInjector(std::string cpu_cg_root,std::string all_name,std::string cg_basename);
 
 		/** do all the setup needed by the cpu injector */
 		int setup(ActionsList& list);

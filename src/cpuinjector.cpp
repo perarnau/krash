@@ -66,9 +66,8 @@ static char CPU_SHARES[] = "cpu.shares";
 
 CPUInjector *MainCPUInjector;
 
-CPUInjector::CPUInjector(std::string cpu_cg_root,std::string cpuset_cg_root,std::string all_name,std::string cg_basename) {
+CPUInjector::CPUInjector(std::string cpu_cg_root,std::string all_name,std::string cg_basename) {
 	cpu_cgroup_root = cpu_cg_root;
-	cpuset_cgroup_root = cpuset_cg_root;
 	alltasks_groupname = all_name;
 	cgroups_basename = cg_basename;
 }

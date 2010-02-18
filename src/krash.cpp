@@ -98,7 +98,7 @@ int main(int argc, char **argv) {
 	ActionsList *list = driver->get_actions();
 
 	/** setup the system */
-	CPUInjector *inj = new CPUInjector(std::string("/"),std::string("/"),std::string("alltasks"),std::string("krash"));
+	CPUInjector *inj = new CPUInjector(std::string("/"),std::string("alltasks"),std::string("krash"));
 	MainCPUInjector = inj;
 	err = inj->setup(*list);
 	if(err) {
