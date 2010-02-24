@@ -25,11 +25,28 @@
 /** Class EventDriver */
 EventDriver::EventDriver(ActionsList& l) : list(l) {
 	loop = new ev::default_loop(EVFLAG_AUTO);
-	watcher = new ev::timer(*loop);
-	watcher->set<EventDriver,&EventDriver::timer_callback>(this);
+	watcher = NULL;
+	sig_watcher = NULL;
+}
+
+EventDriver::~EventDriver() {
+	if(watcher != NULL)
+		delete watcher;
+
+	if(sig_watcher != NULL)
+		delete sig_watcher;
+
+	delete loop;
 }
 
 void EventDriver::start() {
+	// before starting we setup an signal handler to call stop on SIGINT
+	sig_watcher = new ev::sig(*loop);
+	sig_watcher->set<EventDriver,&EventDriver::sigint_callback>(this);
+	sig_watcher->set(SIGINT);
+	sig_watcher->start();
+
+	// start the loop
 	// to start the event handling we define a timer watcher
 	// and use it to wake up every time an action needs to be
 	// performed.
@@ -38,11 +55,14 @@ void EventDriver::start() {
 		start_time = ev::now();
 		// init timer with first time deadline
 		Action *a = list.top();
-		std::cout << "Starting: now: " << start_time << " next event: " << a->get_time() << std::endl;
+		//std::cout << "Starting: now: " << start_time << " next event: " << a->get_time() << std::endl;
+
+		watcher = new ev::timer(*loop);
+		watcher->set<EventDriver,&EventDriver::timer_callback>(this);
 		watcher->set(a->get_time(),a->get_time() + 100);
 		// start timer
 		watcher->start();
-		// DOES NOT RETURN !
+		// return only if this->stop() is called
 		loop->loop(0);
 	}
 	else {
@@ -52,6 +72,11 @@ void EventDriver::start() {
 
 void EventDriver::stop() {
 	loop->unloop(ev::ALL);
+}
+
+void EventDriver::sigint_callback(ev::sig &w, int revents) {
+	std::cerr << "SIGINT catched, exiting krash" << std::endl;
+	this->stop();
 }
 
 void EventDriver::timer_callback(ev::timer &w,int revents) {

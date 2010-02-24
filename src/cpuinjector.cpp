@@ -240,6 +240,7 @@ int CPUInjector::setup_cpu(unsigned int cpuid) {
 	TEST_FOR_ERROR(err,error_free);
 
 	burners_cgs[cpuid] = burner;
+	burners_pids[cpuid] = burner_pid;
 	return 0;
 
 error_free: // we do not recover from this, too hard

@@ -32,6 +32,9 @@ class EventDriver {
 		/** basic constructor */
 		EventDriver(ActionsList& l);
 
+		/** basic destructor */
+		~EventDriver();
+
 		/** start the action handling, launching the event loop **/
 		void start();
 
@@ -41,6 +44,10 @@ class EventDriver {
 
 		/** callback needed by the ev lib */
 		void timer_callback(ev::timer &w, int revents);
+
+		/** callback needed for the SIGINT handler */
+		void sigint_callback(ev::sig &w, int revents);
+
 	private:
 		/** the list of actions, sorted by increasing times */
 		ActionsList list;
@@ -51,12 +58,14 @@ class EventDriver {
 		/** a timer watcher */
 		ev::timer *watcher;
 
+		/** the SIGINT watcher */
+		ev::sig *sig_watcher;
+
 		/** the start time of the loop
 		 * This is needed because ev handle timers
 		 * in absolute time
 		 */
 		ev::tstamp start_time;
 };
-
 
 #endif // !EVENTS_HPP

@@ -58,7 +58,7 @@ int main(int argc, char **argv) {
 	ParserDriver *driver;
 	Profile p;
 	CPUInjector *inj = NULL;
-	EventDriver *e;
+	EventDriver *e = NULL;
 
 	while(1)
 	{
@@ -113,16 +113,23 @@ int main(int argc, char **argv) {
 
 	/* launch the event driver with the parsed actions */
 	e = new EventDriver(*(p.list));
-	e->start(); // DO NOT RETURN
-	return 0;
+	e->start(); // Return only if eventdriver::stop is called
+	// before exiting, cleanup the system:
+	err = inj->cleanup();
+	if(err) goto error_clean;
+	delete inj;
+	delete driver;
+	exit(EXIT_SUCCESS);
 
 error:
-	delete driver;
 	if(inj) {
 		err = inj->cleanup();
-		if(err)
+		if(err) {
+error_clean:
 			std::cerr << "Warning: errors occurred during cleanup, you should check for any left over processes or configuration." << std::endl;
+		}
 		delete inj;
 	}
+	delete driver;
 	exit(EXIT_FAILURE);
 }
