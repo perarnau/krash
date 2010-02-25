@@ -98,6 +98,7 @@ int main(int argc, char **argv) {
 	}
 
 	/* read the profile and parse it */
+	std::cout << "Parsing file " << profile_file << std::endl;
 	profile_file = profile;
 	driver = new ParserDriver(profile_file);
 	err = driver->parse();
@@ -108,6 +109,7 @@ int main(int argc, char **argv) {
 	p = driver->profile;
 
 	/** setup the system */
+	std::cout << "Parsing finished, installing krash on system" << std::endl;
 	inj = new CPUInjector(p.cpu_cg_root,p.all_cg_name,p.burner_cg_basename);
 	MainCPUInjector = inj;
 	err = inj->setup(*(p.list));
@@ -118,8 +120,10 @@ int main(int argc, char **argv) {
 
 	/* launch the event driver with the parsed actions */
 	e = new EventDriver(*(p.list));
+	std::cout << "Setup finished, starting krash" << std::endl;
 	e->start(); // Return only if eventdriver::stop is called
 	// before exiting, cleanup the system:
+	std::cout << "Load injection finished, cleaning the system" << std::endl;
 	err = inj->cleanup();
 	if(err) goto error_clean;
 	delete inj;

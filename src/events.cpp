@@ -55,7 +55,6 @@ void EventDriver::start() {
 		start_time = ev::now();
 		// init timer with first time deadline
 		Action *a = list.top();
-		//std::cout << "Starting: now: " << start_time << " next event: " << a->get_time() << std::endl;
 
 		watcher = new ev::timer(*loop);
 		watcher->set<EventDriver,&EventDriver::timer_callback>(this);
@@ -90,24 +89,21 @@ void EventDriver::timer_callback(ev::timer &w,int revents) {
 	std::map< std::string, Action *>todo;
 	// research actions to execute.
 	ev::tstamp now = ev::now() - start_time;
-	std::cout << "Timer callback: now: " << now << std::endl;
+	std::cout << "Wakeup, we have been injecting load for " << now << " seconds" << std::endl;
 	Action *a;
 	while(!list.empty() && list.top()->get_time() <= now) {
 		a = list.top();
 		todo[a->get_id()] = a;
 		list.pop();
 	}
-	std::cout << "Map: size: " << todo.size() << " top: " << list.top()->get_time() << std::endl;
 	// activate all actions
 	std::map<std::string,Action *>::iterator it;
 	for(it = todo.begin(); it != todo.end(); it++) {
 		it->second->activate();
-		std::cout << "Activated : id: " << it->second->get_id() << " time: " << it->second->get_time() << std::endl;
 	}
 	// reinit timer for next event
 	if(!list.empty()) {
 		a = list.top();
-		std::cout << "Next time is: " << a->get_time() << std::endl;
 		w.set(a->get_time() - now, a->get_time() - now);
 		w.again();
 	}
