@@ -107,4 +107,8 @@ void EventDriver::timer_callback(ev::timer &w,int revents) {
 		w.set(a->get_time() - now, a->get_time() - now);
 		w.again();
 	}
+	else {
+		// there is nothing else to do, just stop the timer.
+		w.stop();
+	}
 }
