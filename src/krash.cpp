@@ -31,16 +31,14 @@
 
 /* Arguments parsing variables */
 static int ask_help = 0;
-static int verbose = 0;
 static char* profile = NULL;
 static struct option long_options[] = {
 	{ "help", no_argument, &ask_help, 1 },
-//	{ "verbose", no_argument, &verbose, 1 },
 	{ "profile", required_argument, NULL, 'p' },
 	{ 0,0,0,0 },
 };
 
-static const char short_opts[] = "hvp:";
+static const char short_opts[] = "hp:";
 
 void print_usage() {
 	std::cerr << "krash: a CPU load Injector" << std::endl;
@@ -48,7 +46,6 @@ void print_usage() {
 	std::cerr << "options:" << std::endl;
 	std::cerr << "-p/--profile: file to use as profile." << std::endl;
 	std::cerr << "-h/--help:    print this usage." << std::endl;
-//	std::cerr << "-v/--verbose: verbose mode." << std::endl;
 }
 
 int main(int argc, char **argv) {
