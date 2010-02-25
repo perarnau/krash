@@ -78,19 +78,13 @@ int main(int argc, char **argv) {
 		}
 	}
 
-	if(ask_help) {
+	if(ask_help || profile == NULL) {
 		print_usage();
 		exit(129);
 	}
 
 	/* read the profile and parse it */
-	if(profile == NULL) {
-		profile_file = "profile";
-	}
-	else {
-		profile_file = profile;
-	}
-
+	profile_file = profile;
 	driver = new ParserDriver(profile_file);
 	err = driver->parse();
 	if(err) {
