@@ -31,28 +31,35 @@
 
 /* Arguments parsing variables */
 static int ask_help = 0;
+static int ask_version = 0;
 static char* profile = NULL;
 static struct option long_options[] = {
 	{ "help", no_argument, &ask_help, 1 },
+	{ "version", no_argument, &ask_version, 1 },
 	{ "profile", required_argument, NULL, 'p' },
 	{ 0,0,0,0 },
 };
 
-static const char short_opts[] = "hp:";
+static const char short_opts[] = "hVp:";
 
 void print_usage() {
 	std::cerr << "krash: a CPU load Injector" << std::endl;
 	std::cerr << "usage: krash [options]" << std::endl;
 	std::cerr << "options:" << std::endl;
 	std::cerr << "-p/--profile: file to use as profile." << std::endl;
-	std::cerr << "-h/--help:    print this usage." << std::endl;
+	std::cerr << "-h/--help:    print this help." << std::endl;
+	std::cerr << "-V/--version: print krash version." << std::endl;
+}
+
+void print_version() {
+	std::cerr << PACKAGE_NAME << " " << PACKAGE_VERSION << std::endl;
 }
 
 int main(int argc, char **argv) {
 	int c,err;
 	int option_index = 0;
 	std::string profile_file;
-	ParserDriver *driver;
+	ParserDriver *driver = NULL;
 	Profile p;
 	CPUInjector *inj = NULL;
 	EventDriver *e = NULL;
@@ -65,9 +72,11 @@ int main(int argc, char **argv) {
 
 		switch(c)
 		{
-			case 'v':
+			case 'V':
+				ask_version = 1;
+				break;
 			case 'h':
-			case 0:
+				ask_help = 1;
 				break;
 			case 'p':
 				profile = optarg;
@@ -76,6 +85,11 @@ int main(int argc, char **argv) {
 			default:
 				exit(1);
 		}
+	}
+
+	if(ask_version) {
+		print_version();
+		exit(0);
 	}
 
 	if(ask_help || profile == NULL) {
