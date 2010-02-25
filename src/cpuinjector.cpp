@@ -86,7 +86,7 @@ static int kill_wait(pid_t task) {
 
 	return 0;
 error:
-	std::cerr << "Error: " << strerror(err) << std::endl;
+	std::cerr << "Error: " << strerror(err) << " in " << __FILE__ << ":" << __LINE__ << std::endl;
 	return err;
 }
 
