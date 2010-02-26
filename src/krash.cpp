@@ -43,14 +43,14 @@ static struct option long_options[] = {
 static const char short_opts[] = "hVp:";
 
 void print_usage() {
-	std::cout << "krash: a CPU load Injector" << std::endl;
-	std::cout << "usage: krash [options]" << std::endl;
+	std::cout << PACKAGE_NAME << ": a CPU load Injector" << std::endl;
+	std::cout << "Usage: "<< PACKAGE <<" [options]" << std::endl;
 	std::cout << "options:" << std::endl;
 	std::cout << "-p/--profile: file to use as profile." << std::endl;
 	std::cout << "-h/--help:    print this help." << std::endl;
 	std::cout << "-V/--version: print krash version." << std::endl;
-	std::cout << "Report bugs to: krash-commits@lists.ligforge.imag.fr" << std::endl;
-	std::cout << "krash home page: <http://krash.ligforge.imag.fr/>" << std::endl;
+	std::cout << "Report bugs to: " << PACKAGE_BUGREPORT << std::endl;
+	std::cout << PACKAGE_NAME << " home page: " << PACKAGE_URL << std::endl;
 }
 
 void print_version() {

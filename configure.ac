@@ -1,7 +1,7 @@
 # fetch version number
 m4_include([version.m4])
 # init autoconf
-AC_INIT([krash],[VERSION_NUMBER],[krash-commits@ligforge.imag.fr])
+AC_INIT([Krash],[VERSION_NUMBER],[krash-commits@ligforge.imag.fr],[krash],[http://krash.ligforge.imag.fr])
 # are we in the right source dir ?
 AC_CONFIG_SRCDIR([src/krash.cpp])
 # build tools in separate dir
