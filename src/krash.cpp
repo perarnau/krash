@@ -52,7 +52,11 @@ void print_usage() {
 }
 
 void print_version() {
-	std::cerr << PACKAGE_NAME << " " << PACKAGE_VERSION << std::endl;
+	std::cout << PACKAGE_NAME << " " << PACKAGE_VERSION << std::endl;
+	std::cout << "Copyright (C) 2009-2010 Swann Perarnau"<< std::endl;
+	std::cout << "License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>" << std::endl;
+	std::cout << "This is free software: you are free to change and redistribute it."<< std::endl;
+	std::cout << "There is NO WARRANTY, to the extent permitted by law."<< std::endl;
 }
 
 int main(int argc, char **argv) {
@@ -94,7 +98,7 @@ int main(int argc, char **argv) {
 
 	if(ask_help || profile == NULL) {
 		print_usage();
-		exit(129);
+		exit(0);
 	}
 
 	/* read the profile and parse it */
