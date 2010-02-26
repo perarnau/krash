@@ -76,6 +76,12 @@ int main(int argc, char **argv) {
 
 		switch(c)
 		{
+			case 0:
+				/* if option set a flag, nothing else to do */
+				if(long_options[option_index].flag != 0)
+					break;
+				else
+					exit(1);
 			case 'V':
 				ask_version = 1;
 				break;
