@@ -83,7 +83,7 @@ int main(int argc, char **argv) {
 				if(long_options[option_index].flag != 0)
 					break;
 				else
-					exit(1);
+					exit(EXIT_FAILURE);
 			case 'V':
 				ask_version = 1;
 				break;
@@ -95,20 +95,23 @@ int main(int argc, char **argv) {
 				break;
 			case '?':
 			default:
-				exit(1);
+				exit(EXIT_FAILURE);
 		}
 	}
 
 	if(ask_version) {
 		print_version();
-		exit(0);
+		exit(EXIT_SUCCESS);
 	}
 
-	if(ask_help || profile == NULL) {
+	if(ask_help) {
 		print_usage();
-		exit(0);
+		exit(EXIT_SUCCESS);
 	}
-
+	if(profile == NULL) {
+		print_usage();
+		exit(EXIT_FAILURE);
+	}
 	/* read the profile and parse it */
 	std::cout << "Parsing file " << profile_file << std::endl;
 	profile_file = profile;

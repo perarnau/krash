@@ -1,6 +1,6 @@
 #!/bin/sh
 # Test to ensure calling krash without profile fail and show usage
-krash=../bin/krash
+krash=../src/krash
 # MUST FAIL
 $krash >usage
 ret=$?

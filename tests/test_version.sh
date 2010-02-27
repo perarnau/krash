@@ -1,7 +1,7 @@
 #!/bin/sh
 # Tests for the version command line option
 # Version output should contain a Copyright line
-krash=../bin/krash
+krash=../src/krash
 #ask for version
 $krash --version | grep "Copyright" >/dev/null || exit 1
 echo "--version works"

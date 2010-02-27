@@ -1,7 +1,7 @@
 #!/bin/sh
 # Test for help output of krash
 # help output must contain the line "Usage"
-krash=../bin/krash
+krash=../src/krash
 #ask for help
 $krash --help | grep 'Usage' >/dev/null || exit 1
 echo "--help works"
