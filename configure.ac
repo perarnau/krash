@@ -39,6 +39,6 @@ AC_CHECK_LIB([ev],[ev_loop],[],AC_MSG_ERROR("could not find the ev library"))
 
 
 # output makefiles
-AC_CONFIG_FILES([Makefile src/Makefile doc/Makefile])
+AC_CONFIG_FILES([Makefile src/Makefile doc/Makefile tests/Makefile])
 # do the output
 AC_OUTPUT
