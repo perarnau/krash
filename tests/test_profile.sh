@@ -6,4 +6,5 @@ $krash >usage
 ret=$?
 grep "Usage" usage >/dev/null || exit 0
 echo "Usage output without profile argument"
+rm usage
 exit $ret
