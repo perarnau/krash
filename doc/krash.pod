@@ -1,0 +1,196 @@
+=pod
+
+=head1 NAME
+
+krash - Kernel For Reproduction and Analysis of System Heterogeneity
+
+=head1 SYNOPSIS
+
+krash B<--profile> I<PROFILE>
+
+krash B<--help>,B<--version>
+
+=head1 DESCRIPTION
+
+Mount the cgroups in a good way, then launch B<krash>:
+
+	sudo mkdir /cgroups>
+	sudo mkdir /cgroups/cpu>
+	sudo mount -t cgroup none -o cpu /cgroups/cpu
+	sudo krash -p myprofile
+
+=head2 Requirements
+
+=over
+
+=item Linux kernel version 2.6.24 or above
+
+Compiled with B<CONFIG_FAIR_CGROUP_SCHED> and B<CONFIG_FAIR_GROUP_SCHED> options.
+
+=item Libcgroup
+
+Any version available on debian should be enough.
+
+=item Root access to your machine.
+
+Unless the cgroups are mounted by your administrator and you want to generate a cpu load against your applications only.
+
+=back
+
+=head2 How Krash inject a CPU Load
+
+B<krash> uses group scheduling mechanisms in recent Linux kernels to attribute a fixed share of each cpu to itself.
+This mechanisms are available through an interface known as I<cgroups> or I<Control Groups> and are part of the I<containers> subsystem
+of the Linux kernel.
+
+The B<libcgroup> is used by B<krash> for the interaction with the kernel. This interaction is done internally by writing and creating files
+on a specific filesystem which must be mounted before launching B<krash>.
+
+Without going into details, B<krash> is only able to generate a load against an application. It cannot be used to compete for CPU against
+the kernel (as it use the latter to achieve its load).
+
+By nature, B<krash> is able to generate complex loads, like dynamic ones. The load to generate must be specified in a I<profile>. This
+profile indicates the various phases of the load, each phase corresponding to a constant share injected in the system. Those phases are
+specific to a cpu.
+
+=head2 Writing Profiles
+
+Some samples are provided with B<krash>, they should be clear enough for simple uses of the injector.
+
+It contains several configuration options, and the profile of the injection. The configuration options are simple :
+
+=over
+
+=item cgroup_root= ...
+
+If, for a curious reason, you want B<krash> to load only tasks contained in a
+specific cgroup, give its path relative to the I<cpu controller> mount point here.
+
+=item all_name=...
+
+The name B<krash> will use for the control group containing all loaded tasks.
+
+=item burner_basename=...
+
+The basename used for the creation of every burner group needed for CPU injection.
+
+=item the profile
+
+=over
+
+=item 0 { ... }
+
+The profile for cpuid 0 ( same as /proc/cpuinfo number)
+
+=item 0 ..
+
+An event : at this time (relative to the beginning of the injection) the following share of the CPU will be burned.
+The CPU share burned is constant between two events.
+WARNING : always define times in seconds, time 0 is 0 not 00 or 00:00 or whatever.
+Event 0 is not mandatory but strongly recommended.
+
+=back
+
+=back
+
+=head1 OPTIONS
+
+=over
+
+=item B<-p> I<file>, B<--profile> I<file>
+
+The profile to use in this CPU load injection.
+
+=item B<-h>, B<--help>
+
+Display a simple usage.
+
+=item B<-V>, B<--version>
+
+Display the B<krash> version.
+
+=back
+
+=head1 DIAGNOSTICS
+
+If you encounter problem on the CPU share enforcing of B<krash> please report it, along with
+your profile and a description of the system (at least the libcgroup version and the type of applications running
+in concurrence of B<krash>).
+
+In most cases this problem comes from time drift, try to define less events (more spaced ones) to reduce the problem.
+
+Continue reading below for more information.
+
+=head1 NOTES
+
+=head2 Stopping Krash
+
+Currently the only way to stop krash is by killing it. The SIGINT signal is interpreted as
+a stop command and clean the system of any load.
+
+=head2 About Libcgroup
+
+=over
+
+=item Performance issues
+
+Each time B<krash> must change the share it inject on a CPU, the B<libcgroup> is used. This library is not
+particularly designed for repeated and dynamic modifications of the control groups.
+B<Krash> uses it in the best way it can, and that's always better than previous ad-hoc solutions.
+
+If the profile contains a lot of events it is possible that B<krash> get late in the share enforcing. In
+this case, the code is designed to handle drift and might skip several events to cope with the problem.
+
+=item Libcgroup binaries
+
+DO NOT USE THEM: they suck.
+
+=item F</etc/cgroups.conf>
+
+If it is present, ensure this file contains mount information consistent with the profile given to B<krash>.
+
+=item Administrators
+
+Do not let the libcgroup daemon (B<cgrulesd> or something like that) launch on startup. It will mess with B<krash> in every possible way.
+
+=back
+
+=head1 BUGS
+
+Sometimes, the kernel does not want B<krash> to kill its child processes. An error will be reported and B<krash> will
+warn of problems during system cleanup. The code of B<krash> tries to cope with this error and continues the cleanup. Hopefully
+your system will be ok even after such error.
+
+=head1 RESTRICTIONS
+
+The I<containers> subsystem in the linux kernel is made of several I<controllers>. Each controller is in charge of some
+group control inside the kernel. Each controller is also a specific part of the Virtual FileSystem used to interact with
+the I<cgroups>, and can be either mounted separately or on a shared point with other controllers.
+B<Krash> uses uniquely the I<cpu> controller of this subsystem. Unfortunately
+some of the B<libcgroup> code is completely stupid: it enforces that all groups created inside the I<cgroups VFS> must contain information to
+configure all the various controllers mounted on the same point. Since B<krash> does not have a single clue
+on control values for groups that do not interest it, mounting controllers all in the same point is _NOT_ recommended (it might work) and
+not supported at the moment.
+
+=head1 AUTHOR
+
+Written by Swann Perarnau.
+
+=head1 REPORTING BUGS
+
+ Report bugs to: krash-commits@ligforge.imag.fr
+ Krash home page: http://krash.ligforge.imag.fr
+
+=head1 COPYRIGHT
+
+ Copyright (C) 2009-2010 Swann Perarnau
+ License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+ This is free software: you are free to change and redistribute it.
+ There is NO WARRANTY, to the extent permitted by law.
+
+=head1 SEE ALSO
+
+This tool is the object of a full article that will be presented at the IEEE International Parallel & Distributed Processing Symposium in April 2010.
+You can find a copy of this article on the krash website.
+
+=cut

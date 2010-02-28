@@ -1,9 +1,9 @@
 SUFFIXES = .man .pod
 .pod.man:
-	pod2man $< $@
+	pod2man --section=8 --center "Experimentation Tools" $< $@
 
-man1_MANS = krash.man
+man8_MANS = krash.man
 
-EXTRA_DIST = $(man1_MANS)
+EXTRA_DIST = $(man8_MANS)
 
 
