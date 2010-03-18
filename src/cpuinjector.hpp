@@ -17,18 +17,18 @@
  *  Copyright Swann Perarnau, 2008
  *  Contact: firstname.lastname@imag.fr
  */
-
 #ifndef CPUINJECTOR_HPP
 #define CPUINJECTOR_HPP 1
-
-#include "actions.hpp"
 #include <string>
 #include <map>
-#include <libcgroup.h>
 /** This file is a wrapper around libcgroup */
+#include <libcgroup.h>
+
+#include "component.hpp"
+#include "actions.hpp"
 
 
-class CPUInjector {
+class CPUInjector : public Component {
 	public:
 		/** saves all configuration needed by the cpuinjector */
 		CPUInjector(std::string cpu_cg_root,std::string all_name,std::string cg_basename);
@@ -68,6 +68,47 @@ class CPUInjector {
 		std::map< unsigned int, pid_t > burners_pids;
 };
 
-extern CPUInjector *MainCPUInjector;
+/** CPU Injector action class
+ *
+ * This class specializes Action for the CPU Injector in KRASH.
+ */
+class CPUAction : public Action {
+	public:
+		/** Basic constructor
+		 * @param id an identifier
+		 * @param time the time to activate this action.
+		 * @param cpu the cpu to load in this action.
+		 * @param load the load to inflict in this action.
+		 */
+		CPUAction(std::string id, unsigned int time, unsigned int cpu, unsigned int load,CPUInjector *cpuinj);
+
+		/** Basic constructor
+		 * @param time the time to activate this action.
+		 * @param cpu the cpu to load in this action.
+		 * @param load the load to inflict in this action.
+		 */
+		CPUAction(unsigned int time, unsigned int cpu, unsigned int load, CPUInjector *cpuinj);
+
+		/** gets the cpuid */
+		inline unsigned int get_cpu() { return this->cpu; }
+
+		/** gets the load */
+		inline unsigned int get_load() { return this->load; }
+
+		/** applies a load on the target cpu
+		 * Using the load and cpu members, this function applies
+		 * a load on the target CPU, using our CPU injector backend.
+		 */
+		void activate();
+	protected:
+		/** the target cpu of this action */
+		unsigned int cpu;
+
+		/** the load to apply on the target cpu */
+		unsigned int load;
+
+		/** the cpuinjector to use */
+		CPUInjector *inj;
+};
 
 #endif // !CPUINJECTOR_HPP

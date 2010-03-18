@@ -22,6 +22,7 @@
 
 #include <ev++.h>
 #include "actions.hpp"
+#include "component.hpp"
 
 /** Contains a list of Actions
  *

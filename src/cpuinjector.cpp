@@ -90,12 +90,11 @@ error:
 	return err;
 }
 
-CPUInjector *MainCPUInjector;
-
 CPUInjector::CPUInjector(std::string cpu_cg_root,std::string all_name,std::string cg_basename) {
 	cpu_cgroup_root = cpu_cg_root;
 	alltasks_groupname = all_name;
 	cgroups_basename = cg_basename;
+	all_cg = NULL;
 }
 
 
@@ -171,7 +170,7 @@ int CPUInjector::setup_system() {
 	TEST_FOR_ERROR(err,error);
 
 	/* create the alltasks group */
-	err = create_group(&all_cg,alltasks_groupname,1024);
+	err = create_group(&(this->all_cg),alltasks_groupname,1024);
 	TEST_FOR_ERROR(err,error);
 
 	/* migrate all tasks, using task walking functions */
@@ -337,3 +336,26 @@ int CPUInjector::cleanup() {
 	}
 	return ret;
 }
+
+
+// CPUAction implementation
+
+/* class CPUAction */
+CPUAction::CPUAction(std::string id, unsigned int time, unsigned int cpu, unsigned int load,CPUInjector *cpuinj) : Action(id,time) {
+	this->cpu = cpu;
+	this->load = load;
+	this->inj = cpuinj;
+}
+
+CPUAction::CPUAction(unsigned int time, unsigned int cpu, unsigned int load,CPUInjector *cpuinj) : Action(std::string("cpu"),time) {
+	this->cpu = cpu;
+	this->load = load;
+	this->id += itos(cpu);
+	this->inj = cpuinj;
+}
+
+void CPUAction::activate() {
+	std::cout << "Applying share " << this->load << " on cpu " << this->cpu << " asked for time " << this->time << std::endl;
+	this->inj->apply_share(get_cpu(),get_load());
+}
+

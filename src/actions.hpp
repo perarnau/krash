@@ -17,7 +17,6 @@
  *  Copyright Swann Perarnau, 2008
  *  Contact: firstname.lastname@imag.fr
  */
-
 #ifndef ACTIONS_HPP
 #define ACTIONS_HPP 1
 
@@ -79,47 +78,5 @@ struct gt_pointers : std::binary_function <Action*, Action*, bool> {
 };
 
 typedef std::priority_queue<Action*, std::vector<Action*>, gt_pointers> ActionsList;
-
-/** CPU Injector action class
- *
- * This class specializes Action for the CPU Injector in KRASH.
- */
-class CPUAction : public Action {
-	public:
-		/** Basic constructor
-		 * @param id an identifier
-		 * @param time the time to activate this action.
-		 * @param cpu the cpu to load in this action.
-		 * @param load the load to inflict in this action.
-		 */
-		CPUAction(std::string id, unsigned int time, unsigned int cpu, unsigned int load);
-
-		/** Basic constructor
-		 * @param time the time to activate this action.
-		 * @param cpu the cpu to load in this action.
-		 * @param load the load to inflict in this action.
-		 */
-		CPUAction(unsigned int time, unsigned int cpu, unsigned int load);
-
-		/** gets the cpuid */
-		inline unsigned int get_cpu() { return this->cpu; }
-
-		/** gets the load */
-		inline unsigned int get_load() { return this->load; }
-
-		/** applies a load on the target cpu
-		 * Using the load and cpu members, this function applies
-		 * a load on the target CPU, using our CPU injector backend.
-		 */
-		void activate();
-	protected:
-		/** the target cpu of this action */
-		unsigned int cpu;
-
-		/** the load to apply on the target cpu */
-		unsigned int load;
-};
-
-
 
 #endif // ACTIONS_HPP

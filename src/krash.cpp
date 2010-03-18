@@ -67,7 +67,8 @@ int main(int argc, char **argv) {
 	std::string profile_file;
 	ParserDriver *driver = NULL;
 	Profile p;
-	CPUInjector *inj = NULL;
+	std::list<Component *> components;
+	std::list<Component *>::iterator cit;
 	EventDriver *e = NULL;
 
 	while(1)
@@ -122,37 +123,44 @@ int main(int argc, char **argv) {
 		goto error;
 	}
 	p = driver->profile;
+	components = *p.components;
 
 	/** setup the system */
 	std::cout << "Parsing finished, installing krash on system" << std::endl;
-	inj = new CPUInjector(p.cpu_cg_root,p.all_cg_name,p.burner_cg_basename);
-	MainCPUInjector = inj;
-	err = inj->setup(*(p.list));
-	if(err) {
-		std::cerr << "Error during sytem setup, aborting..." << std::endl;
-		goto error;
+	for(cit = components.begin(); cit != components.end(); cit++) {
+		err = (*cit)->setup(*(p.actions));
+		if(err) {
+			std::cerr << "Error during sytem setup, aborting..." << std::endl;
+			goto error;
+		}
 	}
+	//inj = new CPUInjector(p.cpu_cg_root,p.all_cg_name,p.burner_cg_basename);
+	//MainCPUInjector = inj;
 
 	/* launch the event driver with the parsed actions */
-	e = new EventDriver(*(p.list));
+	e = new EventDriver(*(p.actions));
 	std::cout << "Setup finished, starting krash" << std::endl;
 	e->start(); // Return only if eventdriver::stop is called
 	// before exiting, cleanup the system:
 	std::cout << "Load injection finished, cleaning the system" << std::endl;
-	err = inj->cleanup();
+	err = 0;
+	for(cit = components.begin(); cit != components.end(); cit++) {
+		err = err || (*cit)->cleanup();
+		delete (*cit);
+	}
 	if(err) goto error_clean;
-	delete inj;
 	delete driver;
 	exit(EXIT_SUCCESS);
 
 error:
-	if(inj) {
-		err = inj->cleanup();
-		if(err) {
+	err = 0;
+	for(cit = components.begin(); cit != components.end(); cit++) {
+		err = err || (*cit)->cleanup();
+		delete (*cit);
+	}
+	if(err) {
 error_clean:
-			std::cerr << "Warning: errors occurred during cleanup, you should check for any left over processes or configuration." << std::endl;
-		}
-		delete inj;
+		std::cerr << "Warning: errors occurred during cleanup, you should check for any left over processes or configuration." << std::endl;
 	}
 	delete driver;
 	exit(EXIT_FAILURE);

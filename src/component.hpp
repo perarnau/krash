@@ -17,15 +17,16 @@
  *  Copyright Swann Perarnau, 2008
  *  Contact: firstname.lastname@imag.fr
  */
-/** for debug purpose only */
-#include<iostream>
+#ifndef COMPONENT_HPP
+#define COMPONENT_HPP 1
 
 #include "actions.hpp"
-#include "utils.hpp"
 
-/* class Action */
-Action::Action(std::string id, unsigned int time) {
-	this->id = id;
-	this->time = time;
-}
+class Component {
+	public:
+		virtual int setup(ActionsList& list) {};
 
+		virtual int cleanup() {};
+};
+
+#endif

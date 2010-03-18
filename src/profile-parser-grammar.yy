@@ -20,8 +20,10 @@
 %{
 #include <iostream>
 #include <string>
-#include "profile.hpp"
 #include "actions.hpp"
+#include "component.hpp"
+#include "profile.hpp"
+#include "cpuinjector.hpp"
 
 extern void yyerror(Profile p, std::string msg) {
 	std::cerr << msg << std::endl;
@@ -31,6 +33,8 @@ int yylex(void);
 
 /* variables for actions */
 int cpu;
+CPUInjector *cpuinj;
+std::string cpu_cg_root, all_cg_name, burner_cg_basename;
 
 %}
 
@@ -59,21 +63,24 @@ cpu_config:
 
 config:
 	cpu_root all_name burner_basename
+	{ cpuinj = new CPUInjector(cpu_cg_root,all_cg_name,burner_cg_basename);
+	p.components->push_back(cpuinj);
+	}
 	;
 
 cpu_root:
 	CGROUP_ROOT EQUAL ID
-	{ p.cpu_cg_root = *$3;}
+	{ cpu_cg_root = *$3;}
 	;
 
 all_name:
 	ALL_NAME EQUAL ID
-	{ p.all_cg_name = *$3;}
+	{ all_cg_name = *$3;}
 	;
 
 burner_basename:
 	BURNER_BASENAME EQUAL ID
-	{ p.burner_cg_basename = *$3;}
+	{ burner_cg_basename = *$3;}
 	;
 
 profile:
@@ -94,7 +101,7 @@ event_list:
 
 event:
 	NUMBER NUMBER
-	{ CPUAction *a = new CPUAction($1,cpu,$2); p.list->push(a); }
+	{ CPUAction *a = new CPUAction($1,cpu,$2,cpuinj); p.actions->push(a); }
 
 	;
 %%
