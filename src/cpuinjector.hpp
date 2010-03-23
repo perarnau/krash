@@ -23,50 +23,61 @@
 #include <map>
 /** This file is a wrapper around libcgroup */
 #include <libcgroup.h>
-
-#include "component.hpp"
 #include "actions.hpp"
 
+namespace cpuinjector {
 
-class CPUInjector : public Component {
-	public:
-		/** saves all configuration needed by the cpuinjector */
-		CPUInjector(std::string cpu_cg_root,std::string all_name,std::string cg_basename);
+/** Path from the cpu cgroup mountpoint to krash cgroup parent.
+ *
+ * Can be used to control the applications krash competes against:
+ * the cpu shares contained in the profile will be computed by
+ * taking into account only the tasks present in this cgroup.
+ * Default is "/", all applications in the system being charged.
+ */
+extern std::string cpu_cgroup_root;
 
-		/** do all the setup needed by the cpu injector */
-		int setup(ActionsList& list);
+/** Same thing for the cpuset cgroup
+ *
+ * Should be removed since we don't use it anymore
+ */
+extern std::string cpuset_cgroup_root;
 
-		/** apply a share to a cpu
-		 * @param cpuid the cpuid to manipulate
-		 * @param share the share to apply
-		 */
-		int apply_share(unsigned int cpuid, unsigned int share);
 
-		/** cleanup code: to call before exiting krash, leaves the
-		 * system in a clean state*/
-		int cleanup();
-	private:
-		/** moves all tasks present on cpu_cgroup_root
-		 * to a group one level below
-		 */
-		int setup_system();
+/** Name to use when moving all tasks to a single new cgroup
+ *
+ * Default is "alltasks"
+ */
+extern std::string alltasks_groupname;
 
-		/** setup a cpu: create a group for the burner and fork it */
-		int setup_cpu(unsigned int cpuid);
+/** Name prefix for krash specific cgroups
+ *
+ * Default is "krash."
+ */
+extern std::string cgroups_basename;
 
-		/** creates a group, with a given name and cpu.shares value*/
-		int create_group(struct cgroup** ret, std::string name, u_int64_t shares);
+/** do all the setup needed by the cpu injector */
+int setup(ActionsList& list);
 
-		/* static variables to easier save some general info on groups */
-		std::string cpu_cgroup_root;
-		std::string cpuset_cgroup_root;
-		std::string alltasks_groupname;
-		std::string cgroups_basename;
-		/** register all cgroups manipulated */
-		struct cgroup *all_cg;
-		std::map< unsigned int, struct cgroup*> burners_cgs;
-		std::map< unsigned int, pid_t > burners_pids;
-};
+/** apply a share to a cpu
+ * @param cpuid the cpuid to manipulate
+ * @param share the share to apply
+ */
+int apply_share(unsigned int cpuid, unsigned int share);
+
+/** cleanup code: to call before exiting krash, leaves the
+ * system in a clean state*/
+int cleanup();
+
+/** moves all tasks present on cpu_cgroup_root
+ * to a group one level below
+ */
+int setup_system();
+
+/** setup a cpu: create a group for the burner and fork it */
+int setup_cpu(unsigned int cpuid);
+
+/** creates a group, with a given name and cpu.shares value*/
+int create_group(struct cgroup** ret, std::string name, u_int64_t shares);
 
 /** CPU Injector action class
  *
@@ -80,35 +91,27 @@ class CPUAction : public Action {
 		 * @param cpu the cpu to load in this action.
 		 * @param load the load to inflict in this action.
 		 */
-		CPUAction(std::string id, unsigned int time, unsigned int cpu, unsigned int load,CPUInjector *cpuinj);
+		CPUAction(std::string id, unsigned int time, unsigned int cpu, unsigned int load);
 
 		/** Basic constructor
 		 * @param time the time to activate this action.
 		 * @param cpu the cpu to load in this action.
 		 * @param load the load to inflict in this action.
 		 */
-		CPUAction(unsigned int time, unsigned int cpu, unsigned int load, CPUInjector *cpuinj);
-
-		/** gets the cpuid */
-		inline unsigned int get_cpu() { return this->cpu; }
-
-		/** gets the load */
-		inline unsigned int get_load() { return this->load; }
+		CPUAction(unsigned int time, unsigned int cpu, unsigned int load);
 
 		/** applies a load on the target cpu
 		 * Using the load and cpu members, this function applies
 		 * a load on the target CPU, using our CPU injector backend.
 		 */
 		void activate();
-	protected:
+
 		/** the target cpu of this action */
 		unsigned int cpu;
 
 		/** the load to apply on the target cpu */
 		unsigned int load;
-
-		/** the cpuinjector to use */
-		CPUInjector *inj;
 };
 
+} // end namespace
 #endif // !CPUINJECTOR_HPP

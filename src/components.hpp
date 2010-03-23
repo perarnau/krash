@@ -21,12 +21,17 @@
 #define COMPONENT_HPP 1
 
 #include "actions.hpp"
+#include <map>
 
-class Component {
+class Components {
 	public:
-		virtual int setup(ActionsList& list) {};
+		Components() { cpu = false; };
 
-		virtual int cleanup() {};
+		int setup(ActionsList& list);
+
+		int cleanup();
+
+		bool cpu;
 };
 
 #endif

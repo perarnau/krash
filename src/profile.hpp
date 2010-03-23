@@ -2,7 +2,7 @@
 #define PROFILE_HPP 1
 
 #include "actions.hpp"
-#include "component.hpp"
+#include "components.hpp"
 #include <string>
 #include <list>
 
@@ -11,14 +11,14 @@ class Profile {
 		/** basic contructor, doesn't do anything */
 		Profile() {
 			actions = new ActionsList();
-			components = new std::list<Component *>();
+			components = new Components();
 		}
 
 		/** a list of all actions in the profile */
 		ActionsList *actions;
 
 		/** a list of all components initialized in the profile */
-		std::list<Component *> *components;
+		Components *components;
 };
 
 

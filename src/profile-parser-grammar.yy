@@ -21,7 +21,7 @@
 #include <iostream>
 #include <string>
 #include "actions.hpp"
-#include "component.hpp"
+#include "components.hpp"
 #include "profile.hpp"
 #include "cpuinjector.hpp"
 
@@ -33,8 +33,6 @@ int yylex(void);
 
 /* variables for actions */
 int cpu;
-CPUInjector *cpuinj;
-std::string cpu_cg_root, all_cg_name, burner_cg_basename;
 
 %}
 
@@ -59,28 +57,28 @@ config:
 
 cpu_config:
 	TOKCPU OBRACK config profile CBRACK
+	{
+		p.components->cpu = true;
+	}
 	;
 
 config:
 	cpu_root all_name burner_basename
-	{ cpuinj = new CPUInjector(cpu_cg_root,all_cg_name,burner_cg_basename);
-	p.components->push_back(cpuinj);
-	}
 	;
 
 cpu_root:
 	CGROUP_ROOT EQUAL ID
-	{ cpu_cg_root = *$3;}
+	{ cpuinjector::cpu_cgroup_root = *$3;}
 	;
 
 all_name:
 	ALL_NAME EQUAL ID
-	{ all_cg_name = *$3;}
+	{ cpuinjector::alltasks_groupname = *$3;}
 	;
 
 burner_basename:
 	BURNER_BASENAME EQUAL ID
-	{ burner_cg_basename = *$3;}
+	{ cpuinjector::cgroups_basename = *$3;}
 	;
 
 profile:
@@ -101,8 +99,10 @@ event_list:
 
 event:
 	NUMBER NUMBER
-	{ CPUAction *a = new CPUAction($1,cpu,$2,cpuinj); p.actions->push(a); }
-
+	{
+		cpuinjector::CPUAction *a = new cpuinjector::CPUAction($1,cpu,$2);
+		p.actions->push(a);
+	}
 	;
 %%
 

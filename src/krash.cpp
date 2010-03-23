@@ -67,8 +67,7 @@ int main(int argc, char **argv) {
 	std::string profile_file;
 	ParserDriver *driver = NULL;
 	Profile p;
-	std::list<Component *> components;
-	std::list<Component *>::iterator cit;
+	Components *components;
 	EventDriver *e = NULL;
 
 	while(1)
@@ -123,19 +122,15 @@ int main(int argc, char **argv) {
 		goto error;
 	}
 	p = driver->profile;
-	components = *p.components;
+	components = p.components;
 
 	/** setup the system */
 	std::cout << "Parsing finished, installing krash on system" << std::endl;
-	for(cit = components.begin(); cit != components.end(); cit++) {
-		err = (*cit)->setup(*(p.actions));
-		if(err) {
-			std::cerr << "Error during sytem setup, aborting..." << std::endl;
-			goto error;
-		}
+	err = components->setup(*(p.actions));
+	if(err) {
+		std::cerr << "Error during sytem setup, aborting..." << std::endl;
+		goto error;
 	}
-	//inj = new CPUInjector(p.cpu_cg_root,p.all_cg_name,p.burner_cg_basename);
-	//MainCPUInjector = inj;
 
 	/* launch the event driver with the parsed actions */
 	e = new EventDriver(*(p.actions));
@@ -143,21 +138,13 @@ int main(int argc, char **argv) {
 	e->start(); // Return only if eventdriver::stop is called
 	// before exiting, cleanup the system:
 	std::cout << "Load injection finished, cleaning the system" << std::endl;
-	err = 0;
-	for(cit = components.begin(); cit != components.end(); cit++) {
-		err = err || (*cit)->cleanup();
-		delete (*cit);
-	}
+	err = components->cleanup();
 	if(err) goto error_clean;
 	delete driver;
 	exit(EXIT_SUCCESS);
 
 error:
-	err = 0;
-	for(cit = components.begin(); cit != components.end(); cit++) {
-		err = err || (*cit)->cleanup();
-		delete (*cit);
-	}
+	err = components->cleanup();
 	if(err) {
 error_clean:
 		std::cerr << "Warning: errors occurred during cleanup, you should check for any left over processes or configuration." << std::endl;

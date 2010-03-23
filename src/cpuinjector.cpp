@@ -13,13 +13,24 @@
 #include <sys/wait.h>
 #include <signal.h>
 #include <errno.h>
-/** variables defining standard names for controllers
- * and control files
- */
+
+namespace cpuinjector {
+
+// STANDARD NAMES FOR CGROUPS
 static char CPU_CGROUP_NAME[] = "cpu";
 //static char CPUSET_CGROUP_NAME[] = "cpuset";
 static char CPU_SHARES[] = "cpu.shares";
 
+// PUBLIC VARIABLES
+std::string cpu_cgroup_root = "/";
+std::string cpuset_cgroup_root = "/";
+std::string alltasks_groupname = "alltasks";
+std::string cgroups_basename = "krash.";
+
+// STATIC INTERNAL VARIABLES
+static struct cgroup *all_cg = NULL;
+static std::map< unsigned int, struct cgroup*> burners_cgs;
+static std::map< unsigned int, pid_t > burners_pids;
 
 /* ERROR POLICY:
  * The fact that libcgroup can fail in a _lot_ of ways means
@@ -90,15 +101,7 @@ error:
 	return err;
 }
 
-CPUInjector::CPUInjector(std::string cpu_cg_root,std::string all_name,std::string cg_basename) {
-	cpu_cgroup_root = cpu_cg_root;
-	alltasks_groupname = all_name;
-	cgroups_basename = cg_basename;
-	all_cg = NULL;
-}
-
-
-int CPUInjector::setup(ActionsList& list) {
+int setup(ActionsList& list) {
 	int err;
 	std::set<unsigned int> cpus;
 	std::set<unsigned int>::iterator it;
@@ -113,7 +116,7 @@ int CPUInjector::setup(ActionsList& list) {
 		Action *a = copy.top();
 		if(typeid(*a) == typeid(CPUAction)) {
 			CPUAction *ca = (CPUAction *)a;
-			cpus.insert(ca->get_cpu());
+			cpus.insert(ca->cpu);
 		}
 		copy.pop();
 	}
@@ -127,7 +130,7 @@ error:
 	return err;
 }
 
-int CPUInjector::create_group(struct cgroup** ret, std::string name, u_int64_t shares) {
+int create_group(struct cgroup** ret, std::string name, u_int64_t shares) {
 	int err;
 	struct cgroup* cg;
 	struct cgroup_controller *cgc;
@@ -160,7 +163,7 @@ error:
 	return err;
 }
 
-int CPUInjector::setup_system() {
+int setup_system() {
 	void *handle = NULL;
 	pid_t pid;
 	int err;
@@ -170,7 +173,7 @@ int CPUInjector::setup_system() {
 	TEST_FOR_ERROR(err,error);
 
 	/* create the alltasks group */
-	err = create_group(&(this->all_cg),alltasks_groupname,1024);
+	err = create_group(&all_cg,alltasks_groupname,1024);
 	TEST_FOR_ERROR(err,error);
 
 	/* migrate all tasks, using task walking functions */
@@ -204,7 +207,7 @@ error:
 	return err;
 }
 
-int CPUInjector::setup_cpu(unsigned int cpuid) {
+int setup_cpu(unsigned int cpuid) {
 	/* what we need to do:
 	 * - create a cpu control group
 	 * - fork a process
@@ -250,7 +253,7 @@ error:
 	return err;
 }
 
-int CPUInjector::apply_share(unsigned int cpuid, unsigned int share) {
+int apply_share(unsigned int cpuid, unsigned int share) {
 	/* what we need to do
 	 * - know the priority of the alltask group
 	 * - compute the priority to apply to a given cpu group
@@ -305,7 +308,7 @@ error:
 
 // we get called with every exit, on success AND on failure
 // so we must check for each component to ensure everything is in good shape
-int CPUInjector::cleanup() {
+int cleanup() {
 	int err;
 	int ret= 0;
 	// cleanup all_cg
@@ -341,21 +344,20 @@ int CPUInjector::cleanup() {
 // CPUAction implementation
 
 /* class CPUAction */
-CPUAction::CPUAction(std::string id, unsigned int time, unsigned int cpu, unsigned int load,CPUInjector *cpuinj) : Action(id,time) {
+CPUAction::CPUAction(std::string id, unsigned int time, unsigned int cpu, unsigned int load) : Action(id,time) {
 	this->cpu = cpu;
 	this->load = load;
-	this->inj = cpuinj;
 }
 
-CPUAction::CPUAction(unsigned int time, unsigned int cpu, unsigned int load,CPUInjector *cpuinj) : Action(std::string("cpu"),time) {
+CPUAction::CPUAction(unsigned int time, unsigned int cpu, unsigned int load) : Action(std::string("cpu"),time) {
 	this->cpu = cpu;
 	this->load = load;
 	this->id += itos(cpu);
-	this->inj = cpuinj;
 }
 
 void CPUAction::activate() {
 	std::cout << "Applying share " << this->load << " on cpu " << this->cpu << " asked for time " << this->time << std::endl;
-	this->inj->apply_share(get_cpu(),get_load());
+	apply_share(this->cpu,this->load);
 }
 
+} // end namespace
