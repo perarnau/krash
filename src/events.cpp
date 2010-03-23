@@ -22,14 +22,35 @@
 #include <map>
 #include "events.hpp"
 
+namespace events {
+/** the list of actions, sorted by increasing times */
+static ActionsList list;
+
+/** the event loop */
+static struct ev::default_loop *loop;
+
+/** a timer watcher */
+static ev::timer *watcher;
+
+/** the SIGINT watcher */
+static ev::sig *sig_watcher;
+
+/** the start time of the loop
+ * This is needed because ev handle timers
+ * in absolute time
+ */
+static ev::tstamp start_time;
+
 /** Class EventDriver */
-EventDriver::EventDriver(ActionsList& l) : list(l) {
+int setup(ActionsList& l) {
+	list = l;
 	loop = new ev::default_loop(EVFLAG_AUTO);
 	watcher = NULL;
 	sig_watcher = NULL;
+	return 0;
 }
 
-EventDriver::~EventDriver() {
+int cleanup() {
 	if(watcher != NULL)
 		delete watcher;
 
@@ -37,12 +58,13 @@ EventDriver::~EventDriver() {
 		delete sig_watcher;
 
 	delete loop;
+	return 0;
 }
 
-void EventDriver::start() {
+void start() {
 	// before starting we setup an signal handler to call stop on SIGINT
 	sig_watcher = new ev::sig(*loop);
-	sig_watcher->set<EventDriver,&EventDriver::sigint_callback>(this);
+	sig_watcher->set<sigint_callback>(NULL);
 	sig_watcher->set(SIGINT);
 	sig_watcher->start();
 
@@ -57,7 +79,7 @@ void EventDriver::start() {
 		Action *a = list.top();
 
 		watcher = new ev::timer(*loop);
-		watcher->set<EventDriver,&EventDriver::timer_callback>(this);
+		watcher->set<timer_callback>(NULL);
 		watcher->set(a->get_time(),a->get_time() + 100);
 		// start timer
 		watcher->start();
@@ -69,16 +91,16 @@ void EventDriver::start() {
 	}
 }
 
-void EventDriver::stop() {
+void stop() {
 	loop->unloop(ev::ALL);
 }
 
-void EventDriver::sigint_callback(ev::sig &w, int revents) {
+void sigint_callback(ev::sig &w, int revents) {
 	std::cerr << "SIGINT catched, exiting krash" << std::endl;
-	this->stop();
+	stop();
 }
 
-void EventDriver::timer_callback(ev::timer &w,int revents) {
+void timer_callback(ev::timer &w,int revents) {
 	// this callback activate all actions that should
 	// have been activated by the time it get called.
 	// However, it filter the actions: only one action
@@ -112,3 +134,5 @@ void EventDriver::timer_callback(ev::timer &w,int revents) {
 		w.stop();
 	}
 }
+
+} // end of namespace

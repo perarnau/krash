@@ -68,7 +68,6 @@ int main(int argc, char **argv) {
 	ParserDriver *driver = NULL;
 	Profile p;
 	Components *components;
-	EventDriver *e = NULL;
 
 	while(1)
 	{
@@ -132,10 +131,8 @@ int main(int argc, char **argv) {
 		goto error;
 	}
 
-	/* launch the event driver with the parsed actions */
-	e = new EventDriver(*(p.actions));
 	std::cout << "Setup finished, starting krash" << std::endl;
-	e->start(); // Return only if eventdriver::stop is called
+	events::start(); // Return only if eventdriver::stop is called
 	// before exiting, cleanup the system:
 	std::cout << "Load injection finished, cleaning the system" << std::endl;
 	err = components->cleanup();

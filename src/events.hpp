@@ -27,45 +27,26 @@
  *
  * This class handles a list of actions and the event loop code to activate KRASH componants when needed.
  */
-class EventDriver {
-	public:
-		/** basic constructor */
-		EventDriver(ActionsList& l);
+namespace events {
 
-		/** basic destructor */
-		~EventDriver();
+/** basic constructor */
+int setup(ActionsList& l);
 
-		/** start the action handling, launching the event loop **/
-		void start();
+/** basic destructor */
+int cleanup();
 
-		/** stops the action handling, effectivelly making the start method
-		 * to return */
-		void stop();
+/** start the action handling, launching the event loop **/
+void start();
 
-		/** callback needed by the ev lib */
-		void timer_callback(ev::timer &w, int revents);
+/** stops the action handling, effectivelly making the start method
+ * to return */
+void stop();
 
-		/** callback needed for the SIGINT handler */
-		void sigint_callback(ev::sig &w, int revents);
+/** callback needed by the ev lib */
+void timer_callback(ev::timer &w, int revents);
 
-	private:
-		/** the list of actions, sorted by increasing times */
-		ActionsList list;
+/** callback needed for the SIGINT handler */
+void sigint_callback(ev::sig &w, int revents);
 
-		/** the event loop */
-		struct ev::default_loop *loop;
-
-		/** a timer watcher */
-		ev::timer *watcher;
-
-		/** the SIGINT watcher */
-		ev::sig *sig_watcher;
-
-		/** the start time of the loop
-		 * This is needed because ev handle timers
-		 * in absolute time
-		 */
-		ev::tstamp start_time;
-};
-
+} //end of namespace
 #endif // !EVENTS_HPP

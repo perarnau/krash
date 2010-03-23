@@ -19,6 +19,7 @@
  */
 #include "components.hpp"
 #include "cpuinjector.hpp"
+#include "events.hpp"
 #include <iostream>
 
 int Components::setup(ActionsList& list) {
@@ -26,6 +27,7 @@ int Components::setup(ActionsList& list) {
 	if(cpu) {
 		err = cpuinjector::setup(list);
 	}
+	err = err || events::setup(list);
 	return err;
 }
 
@@ -34,5 +36,6 @@ int Components::cleanup() {
 	if(cpu) {
 		err = cpuinjector::cleanup();
 	}
+	err = err || events::cleanup();
 	return err;
 }
