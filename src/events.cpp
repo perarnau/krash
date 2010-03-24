@@ -136,3 +136,10 @@ void timer_callback(ev::timer &w,int revents) {
 }
 
 } // end of namespace
+
+KillAction::KillAction(unsigned int time) : Action("kill",time) {
+}
+
+void KillAction::activate() {
+	events::stop();
+}

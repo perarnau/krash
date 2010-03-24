@@ -24,6 +24,7 @@
 #include "components.hpp"
 #include "profile.hpp"
 #include "cpuinjector.hpp"
+#include "events.hpp"
 
 extern void yyerror(Profile p, std::string msg) {
 	std::cerr << msg << std::endl;
@@ -45,24 +46,25 @@ int cpu;
 	unsigned int num;
 }
 
-%token TOKCPU TOKPROFILE
+%token TOKCPU TOKPROFILE TOKKILL
 %token<num> NUMBER
 %token OBRACK CBRACK EQUAL
 %token<id> ID
 %token CGROUP_ROOT ALL_NAME BURNER_BASENAME
 %%
-config:
-	cpu_config
+profile:
+	| cpu_config profile
+	| kill_config profile
 	;
 
 cpu_config:
-	TOKCPU OBRACK config profile CBRACK
+	TOKCPU OBRACK cpu_args cpu_profile CBRACK
 	{
 		p.components->cpu = true;
 	}
 	;
 
-config:
+cpu_args:
 	cpu_root all_name burner_basename
 	;
 
@@ -81,7 +83,7 @@ burner_basename:
 	{ cpuinjector::cgroups_basename = *$3;}
 	;
 
-profile:
+cpu_profile:
 	TOKPROFILE OBRACK cpuid_profiles CBRACK
 	;
 
@@ -90,19 +92,28 @@ cpuid_profiles:
 	;
 
 cpuid_profile:
-	NUMBER { cpu = $1; } OBRACK event_list CBRACK
+	NUMBER { cpu = $1; } OBRACK cpu_event_list CBRACK
 	;
 
-event_list:
-	| event_list event
+cpu_event_list:
+	| cpu_event_list cpu_event
 	;
 
-event:
+cpu_event:
 	NUMBER NUMBER
 	{
 		CPUAction *a = new CPUAction($1,cpu,$2);
 		p.actions->push(a);
 	}
 	;
+
+kill_config:
+	TOKKILL NUMBER
+	{
+		KillAction *k = new KillAction($2);
+		p.actions->push(k);
+	}
+	;
+
 %%
 

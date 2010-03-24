@@ -41,6 +41,7 @@
 \n	;
 cpu			return TOKCPU;
 profile			return TOKPROFILE;
+kill			return TOKKILL;
 cgroup_root		return CGROUP_ROOT;
 all_name		return ALL_NAME;
 burner_basename		return BURNER_BASENAME;

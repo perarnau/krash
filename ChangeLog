@@ -1,2 +1,6 @@
-Feb 28 2010: Swann Perarnau
-	- Too many changes to list, new release.
+2010-03-24	 Swann Perarnau <firstname DOT lastname AT imag DOT fr>
+	* events.*,profile-parser*: added a KillAction, allowing user
+	to specify that krash should stop after some time.
+
+2010-02-28	 Swann Perarnau <firstname DOT lastname AT imag DOT fr>
+	* all: Too many changes to list, new release.

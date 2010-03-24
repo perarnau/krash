@@ -49,4 +49,17 @@ void timer_callback(ev::timer &w, int revents);
 void sigint_callback(ev::sig &w, int revents);
 
 } //end of namespace
+
+class KillAction : public Action {
+	public:
+		/** basic contructor
+		 * only takes action parameters
+		 */
+		KillAction(unsigned int time);
+
+		/** Stop krash upon activation
+		 */
+		void activate();
+};
+
 #endif // !EVENTS_HPP
