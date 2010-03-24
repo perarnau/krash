@@ -100,7 +100,7 @@ event_list:
 event:
 	NUMBER NUMBER
 	{
-		cpuinjector::CPUAction *a = new cpuinjector::CPUAction($1,cpu,$2);
+		CPUAction *a = new CPUAction($1,cpu,$2);
 		p.actions->push(a);
 	}
 	;

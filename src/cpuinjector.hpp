@@ -79,6 +79,8 @@ int setup_cpu(unsigned int cpuid);
 /** creates a group, with a given name and cpu.shares value*/
 int create_group(struct cgroup** ret, std::string name, u_int64_t shares);
 
+} // end namespace
+
 /** CPU Injector action class
  *
  * This class specializes Action for the CPU Injector in KRASH.
@@ -113,5 +115,4 @@ class CPUAction : public Action {
 		unsigned int load;
 };
 
-} // end namespace
 #endif // !CPUINJECTOR_HPP

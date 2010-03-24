@@ -340,6 +340,7 @@ int cleanup() {
 	return ret;
 }
 
+} // end namespace
 
 // CPUAction implementation
 
@@ -357,7 +358,6 @@ CPUAction::CPUAction(unsigned int time, unsigned int cpu, unsigned int load) : A
 
 void CPUAction::activate() {
 	std::cout << "Applying share " << this->load << " on cpu " << this->cpu << " asked for time " << this->time << std::endl;
-	apply_share(this->cpu,this->load);
+	cpuinjector::apply_share(this->cpu,this->load);
 }
 
-} // end namespace
