@@ -1,4 +1,4 @@
-check_SCRIPTS= test_profile.sh test_help.sh test_version.sh
-XFAIL_TESTS = test_profile.sh
+check_SCRIPTS= test_noprofile.sh test_help.sh test_version.sh
+XFAIL_TESTS = test_noprofile.sh
 TESTS = $(check_SCRIPTS)
 EXTRA_DIST = $(TESTS)
