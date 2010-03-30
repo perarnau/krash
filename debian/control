@@ -1,0 +1,22 @@
+Source: krash
+Maintainer: Swann Perarnau <swann.perarnau@imag.fr>
+Section: contrib/admin
+Priority: extra
+Build-Depends: libcgroup-dev, debhelper (>=7.0.0)
+Standards-Version: 3.8.3
+Homepage: http://krash.ligforge.imag.fr/
+
+Package: krash
+Section: contrib/admin
+Priority: extra
+Architecture: i386
+Depends: ${shlibs:Depends}, ${misc:Depends}, libcgroup
+Description: A tool to a generate a dynamic cpu load against other applications
+ Krash make use of the control groups to allocate to itself a static share of 
+ the cpus, no matter how many processes are currently running.
+ .
+ It can be used to simulate an heterogeneous system on an dedicated machine.
+ The method used keep intact every heuristic the kernel generally apply for
+ scheduling processes, making performances obtained under krash similar to
+ the ones found in a real environment.
+Homepage: http://krash.ligforge.imag.fr/
