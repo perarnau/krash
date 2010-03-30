@@ -1,12 +1,12 @@
-Source: krash
+Source: @PACKAGE_NAME@
 Maintainer: Swann Perarnau <swann.perarnau@imag.fr>
 Section: contrib/admin
 Priority: extra
 Build-Depends: libcgroup-dev, debhelper (>=7.0.0)
 Standards-Version: 3.8.3
-Homepage: http://krash.ligforge.imag.fr/
+Homepage: @PACKAGE_URL@
 
-Package: krash
+Package: @PACKAGE_NAME@
 Section: contrib/admin
 Priority: extra
 Architecture: i386
@@ -19,4 +19,4 @@ Description: A tool to a generate a dynamic cpu load against other applications
  The method used keep intact every heuristic the kernel generally apply for
  scheduling processes, making performances obtained under krash similar to
  the ones found in a real environment.
-Homepage: http://krash.ligforge.imag.fr/
+Homepage: @PACKAGE_URL@
