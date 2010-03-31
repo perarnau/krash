@@ -13,4 +13,5 @@ cpu {				# cpu injection part
 			10	30
 		}
 	}				# end of profile
-}				# end of cpu injection part
+}					# end of cpu injection part
+kill 150

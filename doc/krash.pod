@@ -57,37 +57,76 @@ specific to a cpu.
 
 Some samples are provided with B<krash>, they should be clear enough for simple uses of the injector.
 
-It contains several configuration options, and the profile of the injection. The configuration options are simple :
+A profile looks like that:
+
+	cpu {
+		cgroup_root = /
+		all_name = alltasks
+		burner_basename = krash
+		profile {
+			0 {
+				0	50
+			}
+		}
+	}
+	kill 20
 
 =over
 
-=item cgroup_root= ...
+=item actions
+
+This profile contains the command and options for two top-level I<actions>: I<cpu> and I<kill>.
+
+There is only these two actions available in B<krash>, this will change in future versions.
+Each action must be configured properly in order for krash to work, and at least one action should be provided.
+
+=item kill <time>
+
+This action stops krash after I<time> seconds of activity.
+
+=item cpu { config }
+
+This action provides the main feature of krash: cpu load generation.
+It is composed of some configuration variables and a load profile.
+
+=over
+
+=item cgroup_root= <path>
 
 If, for a curious reason, you want B<krash> to load only tasks contained in a
 specific cgroup, give its path relative to the I<cpu controller> mount point here.
 
-=item all_name=...
+=item all_name= <string>
 
 The name B<krash> will use for the control group containing all loaded tasks.
 
-=item burner_basename=...
+=item burner_basename= <string>
 
 The basename used for the creation of every burner group needed for CPU injection.
 
-=item the profile
+=item profile { cpu_profiles }
+
+The profile contains load profiles, one for each processor krash must load.
 
 =over
 
-=item 0 { ... }
+=item <cpuid> { ... }
 
-The profile for cpuid 0 ( same as /proc/cpuinfo number)
+The profile for processor I<cpuid> ( same as /proc/cpuinfo number)
 
-=item 0 ..
+=item <time> <load>
 
-An event : at this time (relative to the beginning of the injection) the following share of the CPU will be burned.
+This is an event: a point in time where the load is changed for a processor.
 The CPU share burned is constant between two events.
+
+The I<time> is relative to the beginning of the injection.
+
+The I<load> gives the share of the CPU to burn.
+
 WARNING : always define times in seconds, time 0 is 0 not 00 or 00:00 or whatever.
 Event 0 is not mandatory but strongly recommended.
+
+=back
 
 =back
 
@@ -113,11 +152,11 @@ Display the B<krash> version.
 
 =head1 DIAGNOSTICS
 
-If you encounter problem on the CPU share enforcing of B<krash> please report it, along with
+If you encounter a problem on the CPU share enforcing of B<krash> please report it, along with
 your profile and a description of the system (at least the libcgroup version and the type of applications running
 in concurrence of B<krash>).
 
-In most cases this problem comes from time drift, try to define less events (more spaced ones) to reduce the problem.
+In most cases incorrect share application comes from time drift, try to define less events (more spaced ones) to reduce the problem.
 
 Continue reading below for more information.
 
@@ -125,8 +164,9 @@ Continue reading below for more information.
 
 =head2 Stopping Krash
 
-Currently the only way to stop krash is by killing it. The SIGINT signal is interpreted as
+Previously the only way to stop krash was by killing it. The SIGINT signal is still interpreted as
 a stop command and clean the system of any load.
+Now that krash as a I<kill> action, you should use it.
 
 =head2 About Libcgroup
 
