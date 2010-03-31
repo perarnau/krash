@@ -1,16 +1,16 @@
 Source: @PACKAGE_NAME@
 Maintainer: Swann Perarnau <swann.perarnau@imag.fr>
-Section: contrib/admin
+Section: admin
 Priority: extra
-Build-Depends: libcgroup-dev, debhelper (>=7.0.0)
+Build-Depends: libcgroup-dev, libev-dev, debhelper (>=7.0.0)
 Standards-Version: 3.8.3
 Homepage: @PACKAGE_URL@
 
 Package: @PACKAGE_NAME@
-Section: contrib/admin
+Section: admin
 Priority: extra
 Architecture: i386
-Depends: ${shlibs:Depends}, ${misc:Depends}, libcgroup
+Depends: ${shlibs:Depends}, ${misc:Depends}, libcgroup1, libev3
 Description: A tool to a generate a dynamic cpu load against other applications
  Krash make use of the control groups to allocate to itself a static share of 
  the cpus, no matter how many processes are currently running.
