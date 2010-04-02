@@ -10,3 +10,4 @@ mostlyclean-local:
 EXTRA_DIST = $(man8_MANS)
 
 
+nobase_dist_doc_DATA = examples/simple.profile examples/biprocessor.profile

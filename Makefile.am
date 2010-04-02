@@ -1,7 +1,8 @@
 ACLOCAL_AMFLAGS = -I m4
 SUBDIRS = src doc tests
 
-EXTRA_DIST = autogen.sh version.sh ChangeLog samples debian README INSTALL COPYING
+EXTRA_DIST = autogen.sh version.sh ChangeLog debian README INSTALL COPYING
+
 
 # custom rule to create a .deb file
 # most of this code is extracted from the distcheck rule
