@@ -35,7 +35,7 @@ AC_CHECK_LIB([ev],[ev_loop],[],AC_MSG_ERROR("could not find the ev library"))
 #DX_INIT_DOXYGEN(ggen,doxygen.cfg,doxygen-doc)
 
 # output makefiles
-AC_CONFIG_FILES([Makefile src/Makefile doc/Makefile tests/Makefile])
+AC_CONFIG_FILES([Makefile src/Makefile doc/Makefile tests/Makefile examples/Makefile])
 # configure debian/*
 AC_CONFIG_FILES([debian/control])
 # configuration output in config.h

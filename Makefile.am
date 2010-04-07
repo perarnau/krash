@@ -1,5 +1,5 @@
 ACLOCAL_AMFLAGS = -I m4
-SUBDIRS = src doc tests
+SUBDIRS = src doc tests examples
 
 EXTRA_DIST = autogen.sh version.sh ChangeLog debian README INSTALL COPYING
 

@@ -8,6 +8,3 @@ mostlyclean-local:
 	-rm $(man8_MANS)
 
 EXTRA_DIST = $(man8_MANS)
-
-
-nobase_dist_doc_DATA = examples/simple.profile examples/biprocessor.profile
