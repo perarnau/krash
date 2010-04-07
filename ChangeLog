@@ -1,6 +1,11 @@
-2010-03-24	 Swann Perarnau <firstname DOT lastname AT imag DOT fr>
+2010-03-31	Swann Perarnau <swann.perarnau@imag.fr>
+	* all: added missing license headers
+	* krash.pod: updated documentation to include the kill action
+	* debian/*: debian packaging info
+
+2010-03-24	Swann Perarnau <firstname DOT lastname AT imag DOT fr>
 	* events.*,profile-parser*: added a KillAction, allowing user
 	to specify that krash should stop after some time.
 
-2010-02-28	 Swann Perarnau <firstname DOT lastname AT imag DOT fr>
+2010-02-28	Swann Perarnau <firstname DOT lastname AT imag DOT fr>
 	* all: Too many changes to list, new release.
