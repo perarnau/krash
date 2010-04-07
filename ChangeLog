@@ -1,3 +1,6 @@
+2010-04-07	Swann Perarnau <swann.perarnau@imag.fr>
+	* README: more concise readme, pointing to the manual
+
 2010-03-31	Swann Perarnau <swann.perarnau@imag.fr>
 	* all: added missing license headers
 	* krash.pod: updated documentation to include the kill action

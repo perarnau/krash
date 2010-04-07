@@ -5,57 +5,13 @@
 # Contact : firstname.lastname@imag.fr
 ##############################################################
 
-Requirements:
+Build Requirements:
 ###############
 
 	-- Linux kernel version 2.6.24 or above compiled with CONFIG_FAIR_CGROUP_SCHED and CONFIG_FAIR_GROUP_SCHED options
 	-- libcgroup, any version available on debian should be enough
+	-- libev, krash is known to work with libev3
 	-- autotools
-	-- Root access to your machine.
-
-Some things to now:
-####################
-
-About the cgroups:
-	If you don't know anything about the group scheduling there is still some keywords that you should be informed of:
-	- the Linux Kernel call the mechanism behind group scheduling the control groups or cgroups.
-	- Various controllers exist: the cgroups can be used for many things, and each controller is in charge of ONE
-	precise group mechanism. We use only one: cpu (in charge of group scheduling).
-	- All those controllers are configured by a Virtual FileSystem. You can mount in userspace only the controllers you want,
-	and you can mount them separately or in a single mount point.
-
-About the libcgroup:
-	This library is not particularly designed for repeted and dynamic modifications of the control groups. We use it
-	in the best way we can, and that's still better than previous ad-hoc solutions.
-	DO NOT USE THE BINAIRIES packaged with this library : they suck. 
-	- The /etc/cgroups.conf must be edited carefully if it is present.
-	- Do not let the cgroup daemon launch on startup.
-	- Some of this library code is completely stupid: we already stated that the controllers can be mounted either separately
-	or all in one mount point. But the library enforce that all groups created inside this VFS must contain information to
-	configure all the various controllers mounted on the same point. Since KRASH does not have a single clue
-	on control values for groups that do not interest us, mounting controllers all in the same point is _NOT_ recommended and
-	not supported at the moment.
-
-	Instructions to mount the cgroups in a good way:
-		sudo mkdir /cgroups
-		sudo mkdir /cgroups/cpu
-		sudo mount -t cgroup none -o cpu /cgroups/cpu
-
-You _MUST_ mount the cgroup virtual filesystems, at least the cpu one.
-
-The profile file : some samples are provided, they should be enough for simple use of the injector.
-	It contains several configuration options, and the profile of the injection.
-	the config options are simple :
-		cgroup_root= ... if, for a curious reason, you want krash to load only tasks contained in a
-		specific cgroup, give its path relative to the cpu controller mount point here.
-		all_name=...  the name krash will use for the control group containing all loaded tasks.
-		burner_basename=... the basename krash will use for every burner group needed for cpu injection.
-	the profile :
-		0 { ... } is the profile for cpuid 0 ( same as /proc/cpuinfo number)
-		0 .. is an event : at this time (relative to the beginning of the injection) the following share of the cpu will be burned.
-		between two events the share is constant.
-		WARNING :  	always define times in seconds : time 0 is 0 not 00 or 00:00 or whatever.
-				event 0 is not mandatory but strongly recommended.
 
 Install notes:
 ###############
@@ -68,13 +24,4 @@ For any serious error, please contact us.
 Using KRASH:
 #############
 
-Edit profile according to your needs :
-	vi profile
-
-Run krash
-	sudo ./krash -p profile
-
-Currently the only way to stop krash is by killing it. The SIGINT  signal is interpreted as
-a stop command and clean the system of any load.
-Sometimes, the kernel does not want us to kill our child processes. An error will be reported and KRASH will
-warn you of problems during system cleanup. Do not worry, it's probably nothing.
+Look at the krash manual for up to date usage info.
