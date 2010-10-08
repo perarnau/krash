@@ -29,6 +29,8 @@
  */
 namespace events {
 
+extern struct ev::default_loop *loop;
+
 /** basic constructor */
 int setup(ActionsList& l);
 

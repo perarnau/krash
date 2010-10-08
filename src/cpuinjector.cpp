@@ -18,6 +18,7 @@
  *  Contact: firstname.lastname@imag.fr
  */
 #include "cpuinjector.hpp"
+#include "events.hpp"
 #include "utils.hpp"
 #include <cstdlib>
 #include <cstring>
@@ -50,6 +51,9 @@ std::string cgroups_basename = "krash.";
 static struct cgroup *all_cg = NULL;
 static std::map< unsigned int, struct cgroup*> burners_cgs;
 static std::map< unsigned int, pid_t > burners_pids;
+static bool error_on_ev_child = true;
+static std::map< unsigned int, ev::child * > burners_watchers;
+static std::map< pid_t, unsigned int > burners_cpus;
 
 /* ERROR POLICY:
  * The fact that libcgroup can fail in a _lot_ of ways means
@@ -99,24 +103,28 @@ static std::map< unsigned int, pid_t > burners_pids;
 // register something went wrong but don't exit
 #define SAVE_RET(err,ret) if(err) { ret = err; }
 
+
+void child_callback(ev::child &w, int revents) {
+	unsigned int cpu;
+	cpu = burners_cpus[w.rpid];
+	burners_pids.erase(cpu);
+	burners_watchers[cpu]->stop();
+	delete burners_watchers[cpu];
+	if(error_on_ev_child)
+	{
+		std::cerr << "Error: child " << w.pid << " exited with status "
+			<< w.rstatus << std::endl;
+				events::stop(1);
+	}
+}
+
 // kill and wait a task
 static int kill_wait(pid_t task) {
 	int err;
-	pid_t waited;
-
+	error_on_ev_child = false;
 	err = kill(task,SIGKILL);
 	if(err)
-		goto error;
-
-	waited = waitpid(task,NULL,0);
-	if(waited == -1) {
-		err = errno;
-		goto error;
-	}
-
-	return 0;
-error:
-	std::cerr << "Error: " << strerror(err) << " in " << __FILE__ << ":" << __LINE__ << std::endl;
+		std::cerr << "Error: " << strerror(err) << " in " << __FILE__ << ":" << __LINE__ << std::endl;
 	return err;
 }
 
@@ -262,6 +270,10 @@ int setup_cpu(unsigned int cpuid) {
 
 	burners_cgs[cpuid] = burner;
 	burners_pids[cpuid] = burner_pid;
+	burners_watchers[cpuid] = new ev::child(*events::loop);
+	burners_watchers[cpuid]->set<child_callback>(NULL);
+	burners_watchers[cpuid]->set(burner_pid,0);
+	burners_watchers[cpuid]->start();
 	return 0;
 
 error_free: // we do not recover from this, too hard
@@ -345,12 +357,15 @@ int cleanup() {
 		struct cgroup *cg = it->second;
 
 		// find the pid of the burner
-		pid_t burner_pid = burners_pids[it->first];
+		std::map<unsigned int, pid_t>::iterator b;
+		b = burners_pids.find(it->first);
+		if(b != burners_pids.end())
+		{
+			// kill and wait him
+			err = kill_wait(b->second);
+			SAVE_RET(err,ret);
 
-		// kill and wait him
-		err = kill_wait(burner_pid);
-		SAVE_RET(err,ret);
-
+		}
 		// free the structure
 		err = cgroup_delete_cgroup(cg,0);
 		SAVE_RET(err,ret);

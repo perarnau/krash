@@ -26,8 +26,8 @@ namespace events {
 /** the list of actions, sorted by increasing times */
 static ActionsList list;
 
-/** the event loop */
-static struct ev::default_loop *loop;
+/** the default loop */
+struct ev::default_loop *loop;
 
 /** a timer watcher */
 static ev::timer *watcher;

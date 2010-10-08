@@ -32,10 +32,11 @@
 int install_all(Profile p)
 {
 	int err = 0;
+	err = events::setup(*p.actions);
+	if(err) return err;
 	if(p.inject_cpu) {
-		err = cpuinjector::setup(*p.actions);
+		err = err || cpuinjector::setup(*p.actions);
 	}
-	err = err || events::setup(*p.actions);
 	return err;
 }
 
