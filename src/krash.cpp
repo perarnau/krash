@@ -52,11 +52,9 @@ int clean_all(Profile p)
 /* Arguments parsing variables */
 static int ask_help = 0;
 static int ask_version = 0;
-static char* profile = NULL;
 static struct option long_options[] = {
 	{ "help", no_argument, &ask_help, 1 },
 	{ "version", no_argument, &ask_version, 1 },
-	{ "profile", required_argument, NULL, 'p' },
 	{ 0,0,0,0 },
 };
 
@@ -64,9 +62,8 @@ static const char short_opts[] = "hVp:";
 
 void print_usage() {
 	std::cout << PACKAGE_NAME << ": a CPU load Injector" << std::endl;
-	std::cout << "Usage: "<< PACKAGE <<" [options]" << std::endl;
+	std::cout << "Usage: "<< PACKAGE <<" [options] <profile>" << std::endl;
 	std::cout << "options:" << std::endl;
-	std::cout << "-p/--profile: file to use as profile." << std::endl;
 	std::cout << "-h/--help:    print this help." << std::endl;
 	std::cout << "-V/--version: print krash version." << std::endl;
 	std::cout << "Report bugs to: " << PACKAGE_BUGREPORT << std::endl;
@@ -76,7 +73,7 @@ void print_usage() {
 void print_version() {
 	std::cout << PACKAGE_NAME << " " << PACKAGE_VERSION << std::endl;
 	std::cout << "Copyright (C) 2009-2010 Swann Perarnau"<< std::endl;
-	std::cout << "License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>" << std::endl;
+	std::cout << "License GPLv3+: <http://gnu.org/licenses/gpl.html>" << std::endl;
 	std::cout << "This is free software: you are free to change and redistribute it."<< std::endl;
 	std::cout << "There is NO WARRANTY, to the extent permitted by law."<< std::endl;
 }
@@ -84,7 +81,7 @@ void print_version() {
 int main(int argc, char **argv) {
 	int c,err;
 	int option_index = 0;
-	std::string profile_file;
+	std::string input;
 	ParserDriver *driver = NULL;
 	Profile p;
 
@@ -108,9 +105,6 @@ int main(int argc, char **argv) {
 			case 'h':
 				ask_help = 1;
 				break;
-			case 'p':
-				profile = optarg;
-				break;
 			case '?':
 			default:
 				exit(EXIT_FAILURE);
@@ -126,17 +120,17 @@ int main(int argc, char **argv) {
 		print_usage();
 		exit(EXIT_SUCCESS);
 	}
-	if(profile == NULL) {
-		print_usage();
+	if(argc != 2) {
+		std::cerr << PACKAGE << ": missing profile" << std::endl;
 		exit(EXIT_FAILURE);
 	}
+	input = argv[1];
 	/* read the profile and parse it */
-	std::cout << "Parsing file " << profile_file << std::endl;
-	profile_file = profile;
-	driver = new ParserDriver(profile_file);
+	std::cout << "Parsing file " << input << std::endl;
+	driver = new ParserDriver(input);
 	err = driver->parse();
 	if(err) {
-		std::cerr << "Error while parsing " << profile_file << ",aborting..." << std::endl;
+		std::cerr << "Error while parsing " << input << ",aborting..." << std::endl;
 		goto error;
 	}
 	p = driver->profile;
