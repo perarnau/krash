@@ -390,8 +390,10 @@ CPUAction::CPUAction(unsigned int time, unsigned int cpu, unsigned int load) : A
 	this->id += itos(cpu);
 }
 
-void CPUAction::activate() {
+int CPUAction::activate() {
+	int err;
 	std::cout << "Applying share " << this->load << " on cpu " << this->cpu << " asked for time " << this->time << std::endl;
-	cpuinjector::apply_share(this->cpu,this->load);
+	err = cpuinjector::apply_share(this->cpu,this->load);
+	return err;
 }
 

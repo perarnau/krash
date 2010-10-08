@@ -63,7 +63,7 @@ class KillAction : public Action {
 
 		/** Stop krash upon activation
 		 */
-		void activate();
+		int activate();
 };
 
 #endif // !EVENTS_HPP

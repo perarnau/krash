@@ -114,6 +114,7 @@ void timer_callback(ev::timer &w,int revents) {
 
 	// a map to register all actions to execute.
 	std::map< std::string, Action *>todo;
+	int err;
 	// research actions to execute.
 	ev::tstamp now = ev::now() - start_time;
 	std::cout << "Wakeup, we have been injecting load for " << now << " seconds" << std::endl;
@@ -126,7 +127,12 @@ void timer_callback(ev::timer &w,int revents) {
 	// activate all actions
 	std::map<std::string,Action *>::iterator it;
 	for(it = todo.begin(); it != todo.end(); it++) {
-		it->second->activate();
+		err = it->second->activate();
+		if(err)
+		{
+			stop(err);
+			return;
+		}
 	}
 	// reinit timer for next event
 	if(!list.empty()) {
@@ -145,6 +151,7 @@ void timer_callback(ev::timer &w,int revents) {
 KillAction::KillAction(unsigned int time) : Action("kill",time) {
 }
 
-void KillAction::activate() {
+int KillAction::activate() {
 	events::stop(0);
+	return 0;
 }

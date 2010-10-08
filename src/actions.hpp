@@ -54,7 +54,7 @@ class Action {
 		}
 
 		/** virtual method for the activation of an action */
-		virtual void activate() { };
+		virtual int activate() { };
 
 	protected:
 		/** Time, since the beginning of KRASH, at which this action must

@@ -106,7 +106,7 @@ class CPUAction : public Action {
 		 * Using the load and cpu members, this function applies
 		 * a load on the target CPU, using our CPU injector backend.
 		 */
-		void activate();
+		int activate();
 
 		/** the target cpu of this action */
 		unsigned int cpu;
