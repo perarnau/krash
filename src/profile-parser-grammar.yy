@@ -21,12 +21,11 @@
 #include <iostream>
 #include <string>
 #include "actions.hpp"
-#include "components.hpp"
 #include "profile.hpp"
 #include "cpuinjector.hpp"
 #include "events.hpp"
 
-extern void yyerror(Profile p, std::string msg) {
+extern void yyerror(Profile *p, std::string msg) {
 	std::cerr << msg << std::endl;
 }
 
@@ -37,7 +36,7 @@ int cpu;
 
 %}
 
-%parse-param { Profile p }
+%parse-param { Profile *p }
 
 %error-verbose
 
@@ -60,7 +59,7 @@ profile:
 cpu_config:
 	TOKCPU OBRACK cpu_args cpu_profile CBRACK
 	{
-		p.components->cpu = true;
+		p->inject_cpu = true;
 	}
 	;
 
@@ -103,7 +102,7 @@ cpu_event:
 	NUMBER NUMBER
 	{
 		CPUAction *a = new CPUAction($1,cpu,$2);
-		p.actions->push(a);
+		p->actions->push(a);
 	}
 	;
 
@@ -111,7 +110,7 @@ kill_config:
 	TOKKILL NUMBER
 	{
 		KillAction *k = new KillAction($2);
-		p.actions->push(k);
+		p->actions->push(k);
 	}
 	;
 

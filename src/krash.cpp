@@ -29,6 +29,26 @@
 #include "profile.hpp"
 #include "cpuinjector.hpp"
 
+int install_all(Profile p)
+{
+	int err = 0;
+	if(p.inject_cpu) {
+		err = cpuinjector::setup(*p.actions);
+	}
+	err = err || events::setup(*p.actions);
+	return err;
+}
+
+int clean_all(Profile p)
+{
+	int err =  0;
+	if(p.inject_cpu) {
+		err = cpuinjector::cleanup();
+	}
+	err = err || events::cleanup();
+	return err;
+}
+
 /* Arguments parsing variables */
 static int ask_help = 0;
 static int ask_version = 0;
@@ -67,7 +87,6 @@ int main(int argc, char **argv) {
 	std::string profile_file;
 	ParserDriver *driver = NULL;
 	Profile p;
-	Components *components;
 
 	while(1)
 	{
@@ -121,11 +140,10 @@ int main(int argc, char **argv) {
 		goto error;
 	}
 	p = driver->profile;
-	components = p.components;
 
 	/** setup the system */
 	std::cout << "Parsing finished, installing krash on system" << std::endl;
-	err = components->setup(*(p.actions));
+	err = install_all(p);
 	if(err) {
 		std::cerr << "Error during sytem setup, aborting..." << std::endl;
 		goto error;
@@ -135,13 +153,13 @@ int main(int argc, char **argv) {
 	events::start(); // Return only if eventdriver::stop is called
 	// before exiting, cleanup the system:
 	std::cout << "Load injection finished, cleaning the system" << std::endl;
-	err = components->cleanup();
+	err = clean_all(p);
 	if(err) goto error_clean;
 	delete driver;
 	exit(EXIT_SUCCESS);
 
 error:
-	err = components->cleanup();
+	err = clean_all(p);
 	if(err) {
 error_clean:
 		std::cerr << "Warning: errors occurred during cleanup, you should check for any left over processes or configuration." << std::endl;

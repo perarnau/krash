@@ -21,7 +21,7 @@
 #include "profile-parser-driver.hpp"
 #include <iostream>
 
-extern int yyparse(Profile p);
+extern int yyparse(Profile *p);
 
 ParserDriver::ParserDriver(std::string file) {
 	this->filename = file;
@@ -30,7 +30,7 @@ ParserDriver::ParserDriver(std::string file) {
 int ParserDriver::parse() {
 	int err;
 	scan_begin();
-	err = yyparse(this->profile);
+	err = yyparse(&this->profile);
 	scan_end();
 	return err;
 }
