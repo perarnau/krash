@@ -41,12 +41,15 @@ static ev::sig *sig_watcher;
  */
 static ev::tstamp start_time;
 
+static int error;
+
 /** Class EventDriver */
 int setup(ActionsList& l) {
 	list = l;
 	loop = new ev::default_loop(EVFLAG_AUTO);
 	watcher = NULL;
 	sig_watcher = NULL;
+	error = 0;
 	return 0;
 }
 
@@ -61,7 +64,7 @@ int cleanup() {
 	return 0;
 }
 
-void start() {
+int start() {
 	// before starting we setup an signal handler to call stop on SIGINT
 	sig_watcher = new ev::sig(*loop);
 	sig_watcher->set<sigint_callback>(NULL);
@@ -87,17 +90,19 @@ void start() {
 		loop->loop(0);
 	}
 	else {
-		// TODO error
+		std::cout << "No actions, exiting..." << std::endl;
 	}
+	return error;
 }
 
-void stop() {
+void stop(int err) {
+	error = err;
 	loop->unloop(ev::ALL);
 }
 
 void sigint_callback(ev::sig &w, int revents) {
 	std::cerr << "SIGINT catched, exiting krash" << std::endl;
-	stop();
+	stop(0);
 }
 
 void timer_callback(ev::timer &w,int revents) {
@@ -141,5 +146,5 @@ KillAction::KillAction(unsigned int time) : Action("kill",time) {
 }
 
 void KillAction::activate() {
-	events::stop();
+	events::stop(0);
 }

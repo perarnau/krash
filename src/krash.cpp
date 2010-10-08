@@ -144,7 +144,8 @@ int main(int argc, char **argv) {
 	}
 
 	std::cout << "Setup finished, starting krash" << std::endl;
-	events::start(); // Return only if eventdriver::stop is called
+	err = events::start(); // Return only if eventdriver::stop is called
+	if(err) goto error;
 	// before exiting, cleanup the system:
 	std::cout << "Load injection finished, cleaning the system" << std::endl;
 	err = clean_all(p);

@@ -35,12 +35,14 @@ int setup(ActionsList& l);
 /** basic destructor */
 int cleanup();
 
-/** start the action handling, launching the event loop **/
-void start();
+/** start the action handling, launching the event loop
+ *  returns 0 if everything went well, a positive integer otherwise
+ */
+int start();
 
 /** stops the action handling, effectivelly making the start method
  * to return */
-void stop();
+void stop(int err);
 
 /** callback needed by the ev lib */
 void timer_callback(ev::timer &w, int revents);
