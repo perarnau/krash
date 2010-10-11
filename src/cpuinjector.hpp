@@ -20,34 +20,9 @@
 #ifndef CPUINJECTOR_HPP
 #define CPUINJECTOR_HPP 1
 #include <string>
-#include <map>
-/** This file is a wrapper around libcgroup */
-#include <libcgroup.h>
 #include "actions.hpp"
 
 namespace cpuinjector {
-
-/** Path from the cpu cgroup mountpoint to krash cgroup parent.
- *
- * Can be used to control the applications krash competes against:
- * the cpu shares contained in the profile will be computed by
- * taking into account only the tasks present in this cgroup.
- * Default is "/", all applications in the system being charged.
- */
-extern std::string cpu_cgroup_root;
-
-
-/** Name to use when moving all tasks to a single new cgroup
- *
- * Default is "alltasks"
- */
-extern std::string alltasks_groupname;
-
-/** Name prefix for krash specific cgroups
- *
- * Default is "krash."
- */
-extern std::string cgroups_basename;
 
 /** do all the setup needed by the cpu injector */
 int setup(ActionsList& list);
@@ -62,16 +37,8 @@ int apply_share(unsigned int cpuid, unsigned int share);
  * system in a clean state*/
 int cleanup();
 
-/** moves all tasks present on cpu_cgroup_root
- * to a group one level below
- */
-int setup_system();
-
 /** setup a cpu: create a group for the burner and fork it */
 int setup_cpu(unsigned int cpuid);
-
-/** creates a group, with a given name and cpu.shares value*/
-int create_group(struct cgroup** ret, std::string name, u_int64_t shares);
 
 } // end namespace
 

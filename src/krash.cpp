@@ -28,12 +28,17 @@
 #include "profile-parser-driver.hpp"
 #include "profile.hpp"
 #include "cpuinjector.hpp"
+#include "cgroups.hpp"
 
 int install_all(Profile p)
 {
 	int err = 0;
 	err = events::setup(*p.actions);
 	if(err) return err;
+
+	err = cgroups::init();
+	if(err) return err;
+
 	if(p.inject_cpu) {
 		err = err || cpuinjector::setup(*p.actions);
 	}
@@ -46,6 +51,7 @@ int clean_all(Profile p)
 	if(p.inject_cpu) {
 		err = cpuinjector::cleanup();
 	}
+	err = err || cgroups::cleanup();
 	err = err || events::cleanup();
 	return err;
 }

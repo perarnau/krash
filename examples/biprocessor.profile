@@ -1,7 +1,6 @@
+cgroup_root = /
+all_name = alltasks
 cpu {
-	cgroup_root = /
-	all_name = alltasks
-	burner_basename = krash
 	profile {
 		0 {
 			0	70

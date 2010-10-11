@@ -1,7 +1,6 @@
+cgroup_root = /
+all_name = alltasks
 cpu {				# cpu injection part
-	cgroup_root = /
-	all_name = alltasks
-	burner_basename = krash
 	profile {			# the load profile itself
 		0 {				# cpuid of the cpu to load
 			0	70		# MANDATORY : time 00:00:00 must be present for each cpu. From the beginning of the injection we load 70% of the cpu.

@@ -22,6 +22,7 @@
 #include <string>
 #include "actions.hpp"
 #include "profile.hpp"
+#include "cgroups.hpp"
 #include "cpuinjector.hpp"
 #include "events.hpp"
 
@@ -52,34 +53,34 @@ int cpu;
 %token CGROUP_ROOT ALL_NAME BURNER_BASENAME
 %%
 profile:
+	| config profile
 	| cpu_config profile
 	| kill_config profile
 	;
 
+config:
+      config_args
+      ;
+
 cpu_config:
-	TOKCPU OBRACK cpu_args cpu_profile CBRACK
+	TOKCPU OBRACK cpu_profile CBRACK
 	{
 		p->inject_cpu = true;
 	}
 	;
 
-cpu_args:
-	cpu_root all_name burner_basename
+config_args:
+	target_root all_name
 	;
 
-cpu_root:
+target_root:
 	CGROUP_ROOT EQUAL ID
-	{ cpuinjector::cpu_cgroup_root = *$3;}
+	{ cgroups::target_path = *$3;}
 	;
 
 all_name:
 	ALL_NAME EQUAL ID
-	{ cpuinjector::alltasks_groupname = *$3;}
-	;
-
-burner_basename:
-	BURNER_BASENAME EQUAL ID
-	{ cpuinjector::cgroups_basename = *$3;}
+	{ cgroups::alltasks_groupname = *$3;}
 	;
 
 cpu_profile:

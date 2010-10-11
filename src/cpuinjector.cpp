@@ -20,12 +20,14 @@
 #include "cpuinjector.hpp"
 #include "events.hpp"
 #include "utils.hpp"
+#include "cgroups.hpp"
 #include "errors.hpp"
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
 #include <set>
 #include <typeinfo>
+#include <map>
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE // need by sched.h
 #endif
@@ -74,9 +76,6 @@ int setup(ActionsList& list) {
 	std::set<unsigned int>::iterator it;
 	ActionsList copy;
 
-	err = setup_system();
-	TEST_FOR_ERROR(err,error);
-
 	/* we need to copy the list for its inspection */
 	copy = list;
 	while(!copy.empty()) {
@@ -97,83 +96,6 @@ error:
 	return err;
 }
 
-int create_group(struct cgroup** ret, std::string name, u_int64_t shares) {
-	int err;
-	struct cgroup* cg;
-	struct cgroup_controller *cgc;
-
-	std::string full_path = cpu_cgroup_root + name;
-	cg = cgroup_new_cgroup(full_path.c_str());
-	TEST_FOR_ERROR_P(cg,err,error);
-
-	/* to gather data on it, we must add the cpu controller and
-	 * its cpu.shares control file */
-	cgc = cgroup_add_controller(cg,CPU_CGROUP_NAME);
-	TEST_FOR_ERROR_P(cgc,err,error_free);
-
-	/* 1024 is default and a good value */
-	err = cgroup_add_value_uint64(cgc,CPU_SHARES,shares);
-	TEST_FOR_ERROR(err,error_free);
-
-	/* create the group on the filesystem, populating the cg
-	 * with current values */
-	err = cgroup_create_cgroup(cg,0);
-	TEST_FOR_ERROR(err,error_free);
-
-	*ret = cg;
-	return 0;
-error_free:
-	cgroup_free(&cg);
-error:
-	cg_error(err);
-	*ret = NULL;
-	return err;
-}
-
-int setup_system() {
-	void *handle = NULL;
-	pid_t pid;
-	int err;
-
-	/* init cgroup library */
-	err = cgroup_init();
-	TEST_FOR_ERROR(err,error);
-
-	/* create the alltasks group */
-	err = create_group(&all_cg,alltasks_groupname,1024);
-	TEST_FOR_ERROR(err,error);
-
-	/* migrate all tasks, using task walking functions */
-	// ok libcgroup is stupid so I need to pass it a char* and I
-	// only have a const char*, lets do stupid things !
-	err = cgroup_get_task_begin(&cpu_cgroup_root[0],CPU_CGROUP_NAME,&handle,&pid);
-	if(err == ECGEOF)
-		goto end_tasks; // TODO: maybe this is bad, at least one task should be moved, no ?
-
-	TEST_FOR_ERROR(err,error_free);
-
-	do {
-		/* WE MUST SKIP ERRORS HERE, NOT ALL TASKS CAN BE MOVED IF
-		 * OUR ROOT IS THE REAL ROOT */
-		cgroup_attach_task_pid(all_cg,pid); // TODO: skip getpid()
-	}
-	while((err = cgroup_get_task_next(&handle,&pid)) == 0);
-	TEST_FOR_ERROR_IGNORE(err,ECGEOF,error_free);
-
-end_tasks:
-	cgroup_get_task_end(&handle);
-	return 0;
-
-error_free:
-	// create_group() already cleans all_cg so just use this to delete the group
-	cgroup_delete_cgroup(all_cg,0);
-	cgroup_free(&all_cg);
-	// if this fails, we must ensure all_cg is NULL
-	all_cg = NULL;
-error:
-	return err;
-}
-
 int setup_cpu(unsigned int cpuid) {
 	/* what we need to do:
 	 * - create a cpu control group
@@ -183,14 +105,15 @@ int setup_cpu(unsigned int cpuid) {
 	 * - register this cpu as active
 	 */
 	int err;
-	struct cgroup *burner;
-	std::string burner_name;
+	Cgroup *burner;
+	std::string name;
 	pid_t burner_pid;
 
 	/* create the burner cpu cgroup */
-	burner_name = cgroups_basename + itos(cpuid);
-	err = create_group(&burner,burner_name,1024);
-	TEST_FOR_ERROR(err,error);
+	name = "cpu.burner." + itos(cpuid);
+	burner = new Cgroup(name);
+	err = burner->lib_attach(true);
+	TEST_FOR_ERROR(err,error_lib);
 
 	/* fork a burner process */
 	burner_pid = fork();
@@ -205,7 +128,7 @@ int setup_cpu(unsigned int cpuid) {
 	}
 
 	/* attach pid to the burner group */
-	err = cgroup_attach_task_pid(burner,burner_pid);
+	err = burner->attach(burner_pid);
 	TEST_FOR_ERROR(err,error_free);
 
 	burners_cgs[cpuid] = burner;
@@ -218,8 +141,9 @@ int setup_cpu(unsigned int cpuid) {
 
 error_free: // we do not recover from this, too hard
 	kill_wait(burner_pid);
-	cgroup_delete_cgroup(burner,0);
-	cgroup_free(&burner);
+	burner->lib_detach();
+error_lib:
+	delete burner;
 error:
 	return err;
 }
@@ -232,15 +156,11 @@ int apply_share(unsigned int cpuid, unsigned int share) {
 	 */
 	int err;
 	double s,a,nprio;
-	struct cgroup *burner;
-	struct cgroup_controller *all_cgc,*burner_cgc;
+	Cgroup *burner;
 	u_int64_t all_prio,new_prio;
 
 	/* retrieve the cpu cgroup for all and get the cpu.shares value */
-	all_cgc = cgroup_get_controller(all_cg,CPU_CGROUP_NAME);
-	TEST_FOR_ERROR_P(all_cgc,err,error);
-
-	err = cgroup_get_value_uint64(all_cgc,CPU_SHARES,&all_prio);
+	err = All->get_cpu_shares(&all_prio);
 	TEST_FOR_ERROR(err,error);
 
 	/* get the burner cgroup */
@@ -260,16 +180,8 @@ int apply_share(unsigned int cpuid, unsigned int share) {
 	nprio = (a*s/100.0) * (100.0 / (100.0 - s));
 	new_prio = nprio;
 
-	/* get the cpu controller */
-	burner_cgc = cgroup_get_controller(burner,CPU_CGROUP_NAME);
-	TEST_FOR_ERROR_P(burner_cgc,err,error);
-
 	/* set the new value */
-	err = cgroup_set_value_uint64(burner_cgc,CPU_SHARES,new_prio);
-	TEST_FOR_ERROR(err,error);
-
-	/* force lib to rewrite values */
-	err = cgroup_modify_cgroup(burner);
+	err = burner->set_cpu_shares(new_prio);
 	TEST_FOR_ERROR(err,error);
 
 	return 0;
@@ -282,19 +194,11 @@ error:
 int cleanup() {
 	int err;
 	int ret= 0;
-	// cleanup all_cg
-	if(all_cg) {
-		// just delete the group and free the structure
-		// we can't recover from this
-		err = cgroup_delete_cgroup(all_cg,0);
-		SAVE_RET(err,ret);
-		cgroup_free(&all_cg);
-	}
 
 	// cleanup burners
-	std::map<unsigned int, struct cgroup*>::iterator it;
+	std::map<unsigned int, Cgroup*>::iterator it;
 	for(it = burners_cgs.begin(); it != burners_cgs.end(); it++) {
-		struct cgroup *cg = it->second;
+		Cgroup *cg = it->second;
 
 		// find the pid of the burner
 		std::map<unsigned int, pid_t>::iterator b;
@@ -304,12 +208,11 @@ int cleanup() {
 			// kill and wait him
 			err = kill_wait(b->second);
 			SAVE_RET(err,ret);
-
 		}
 		// free the structure
-		err = cgroup_delete_cgroup(cg,0);
+		err = cg->lib_detach();
 		SAVE_RET(err,ret);
-		cgroup_free(&cg);
+		delete cg;
 	}
 	return ret;
 }
