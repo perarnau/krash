@@ -117,7 +117,11 @@ int setup_cpu(unsigned int cpuid) {
 
 	/* fork a burner process */
 	burner_pid = fork();
-	if(!burner_pid) { // never leave this part
+	if(burner_pid == -1) {
+		translate_error(errno);
+		goto error_fork;
+	}
+	if(burner_pid == 0) { // never leave this part
 		/* attach myself to a cpu */
 		cpu_set_t mycpuset;
 		CPU_ZERO(&mycpuset);
@@ -141,6 +145,7 @@ int setup_cpu(unsigned int cpuid) {
 
 error_free: // we do not recover from this, too hard
 	kill_wait(burner_pid);
+error_fork:
 	burner->lib_detach();
 error_lib:
 	delete burner;
