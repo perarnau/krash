@@ -20,6 +20,7 @@
 #include "cpuinjector.hpp"
 #include "events.hpp"
 #include "utils.hpp"
+#include "errors.hpp"
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
@@ -32,75 +33,16 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <signal.h>
-#include <errno.h>
 
 namespace cpuinjector {
-
-// STANDARD NAMES FOR CGROUPS
-static char CPU_CGROUP_NAME[] = "cpu";
-static char CPU_SHARES[] = "cpu.shares";
-
-// PUBLIC VARIABLES
-std::string cpu_cgroup_root = "/";
-std::string alltasks_groupname = "alltasks";
-std::string cgroups_basename = "krash.";
+using namespace cgroups;
 
 // STATIC INTERNAL VARIABLES
-static struct cgroup *all_cg = NULL;
-static std::map< unsigned int, struct cgroup*> burners_cgs;
+static std::map< unsigned int, Cgroup* > burners_cgs;
 static std::map< unsigned int, pid_t > burners_pids;
 static bool error_on_ev_child = true;
 static std::map< unsigned int, ev::child * > burners_watchers;
 static std::map< pid_t, unsigned int > burners_cpus;
-
-/* ERROR POLICY:
- * The fact that libcgroup can fail in a _lot_ of ways means
- * we need to recover errors in a consistent way and let the cpuinjector caller
- * call the cleaner before exiting.
- * Every public method should return 0 or 1 (other values are for us).
- * Every internal method should clean what it created but not exit.
- * Each method should call cg_error before returning, this way we can trace the call stack
- * A special method is here to do the _big_ cleanup (like child processes and stuff)
- */
-
-
-/* helper macro for cgroup errors */
-#define cg_error(errno) {	\
-	if(errno == 0) {	\
-		std::cerr << "Internal Error: called error handling on good condition, report this bug !" << " File: " << __FILE__ << ":" << __LINE__ << std::endl;	\
-	} else if(errno == 1) {	\
-		std::cerr << "Internal Error: unrecoverable error (probably a failed malloc) !" << " File: " << __FILE__ << ":" << __LINE__<< std::endl;	\
-	}	\
-	else {	\
-		std::cerr << "Error: " << cgroup_strerror(errno)<< " File: " << __FILE__ << ":" << __LINE__<< std::endl;	\
-	}	\
-}
-
-#define TEST_FOR_ERROR(err,label) {	\
-	if(err) {			\
-		cg_error(err);	\
-		goto label;		\
-	}				\
-}					\
-
-#define TEST_FOR_ERROR_IGNORE(err,ignore,label) {	\
-	if(err && err != ignore) {			\
-		cg_error(err);				\
-		goto label;				\
-	}						\
-}							\
-
-#define TEST_FOR_ERROR_P(p,err,label) {	\
-	if(!p) {			\
-		err = 1;		\
-		cg_error(err);		\
-		goto label;		\
-	}				\
-}					\
-
-// register something went wrong but don't exit
-#define SAVE_RET(err,ret) if(err) { ret = err; }
-
 
 void child_callback(ev::child &w, int revents) {
 	unsigned int cpu;
@@ -119,11 +61,11 @@ void child_callback(ev::child &w, int revents) {
 // kill and wait a task
 static int kill_wait(pid_t task) {
 	int err;
+	int ret = 0;
 	error_on_ev_child = false;
 	err = kill(task,SIGKILL);
-	if(err)
-		std::cerr << "Error: " << strerror(err) << " in " << __FILE__ << ":" << __LINE__ << std::endl;
-	return err;
+	SAVE_RET(err,ret)
+	return ret;
 }
 
 int setup(ActionsList& list) {
