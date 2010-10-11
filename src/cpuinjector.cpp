@@ -38,12 +38,10 @@ namespace cpuinjector {
 
 // STANDARD NAMES FOR CGROUPS
 static char CPU_CGROUP_NAME[] = "cpu";
-//static char CPUSET_CGROUP_NAME[] = "cpuset";
 static char CPU_SHARES[] = "cpu.shares";
 
 // PUBLIC VARIABLES
 std::string cpu_cgroup_root = "/";
-std::string cpuset_cgroup_root = "/";
 std::string alltasks_groupname = "alltasks";
 std::string cgroups_basename = "krash.";
 

@@ -36,12 +36,6 @@ namespace cpuinjector {
  */
 extern std::string cpu_cgroup_root;
 
-/** Same thing for the cpuset cgroup
- *
- * Should be removed since we don't use it anymore
- */
-extern std::string cpuset_cgroup_root;
-
 
 /** Name to use when moving all tasks to a single new cgroup
  *
