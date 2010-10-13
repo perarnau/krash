@@ -73,9 +73,14 @@ int Cgroup::lib_detach()
 {
 	int err;
 	int ret = 0;
-	// just delete the group and free the structure
-	// we can't recover from this
-	err = cgroup_delete_cgroup(this->cg,0);
+	/** this function deletes the kernel cgroup and
+	 * tries to move all tasks to the parent.
+	 * It fails regularly if one process was killed just before
+	 * it is called.
+	 * So we ask the function to ignore migration errors.
+	 * If it still fails, we consider it an unrecoverable error.
+	 */
+	err = cgroup_delete_cgroup(this->cg,1);
 	SAVE_RET(err,ret);
 	cgroup_free(&this->cg);
 	this->cg = NULL;
