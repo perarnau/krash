@@ -36,7 +36,7 @@ int install_all(Profile p)
 	err = events::setup(*p.actions);
 	if(err) return err;
 
-	err = cgroups::init();
+	err = cgroups::install();
 	if(err) return err;
 
 	if(p.inject_cpu) {
@@ -138,12 +138,15 @@ int main(int argc, char **argv) {
 	err = driver->parse();
 	if(err) {
 		std::cerr << "Error while parsing " << input << ",aborting..." << std::endl;
-		goto error;
+		goto error_parse;
 	}
 	p = driver->profile;
-
+	std::cout <<"Parsing finished" << std::endl;
+	/* initialize the cgroups */
+	err = cgroups::init();
+	if(err) goto error;
 	/** setup the system */
-	std::cout << "Parsing finished, installing krash on system" << std::endl;
+	std::cout << "Installing krash on system" << std::endl;
 	err = install_all(p);
 	if(err) {
 		std::cerr << "Error during sytem setup, aborting..." << std::endl;
@@ -166,6 +169,7 @@ error:
 error_clean:
 		std::cerr << "Warning: errors occurred during cleanup, you should check for any left over processes or configuration." << std::endl;
 	}
+error_parse:
 	delete driver;
 	exit(EXIT_FAILURE);
 }

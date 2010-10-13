@@ -177,23 +177,34 @@ int init()
 	err = target->lib_attach(false);
 	TEST_FOR_ERROR(err,error_target);
 
+	return 0;
+error_target:
+	target->lib_detach();
+	delete target;
+error:
+	target = NULL;
+	return err;
+}
+
+int install()
+{
+	int err = 0;
+
 	/* create the all group */
 	All = new Cgroup(alltasks_groupname);
 	err = All->lib_attach(true);
-	TEST_FOR_ERROR(err,error_all);
+	TEST_FOR_ERROR(err,error);
 
 	/** Move tasks to all */
 	err = target->move_pids(*All);
-	TEST_FOR_ERROR(err,error);
+	TEST_FOR_ERROR(err,error_all);
 
 	return 0;
-error:
-	All->lib_detach();
 error_all:
+	All->lib_detach();
+error:
 	delete All;
-	target->lib_detach();
-error_target:
-	delete target;
+	All = NULL;
 	return err;
 }
 
@@ -205,14 +216,18 @@ int cleanup()
 	 * does it for us.*/
 
 	/* delete all */
-	err = All->lib_detach();
-	SAVE_RET(err,ret);
-	delete All;
+	if(All != NULL) {
+		err = All->lib_detach();
+		SAVE_RET(err,ret);
+		delete All;
+	}
 
 	/* delete target */
-	err = target->lib_detach();
-	SAVE_RET(err,ret);
-	delete target;
+	if(target != NULL) {
+		err = target->lib_detach();
+		SAVE_RET(err,ret);
+		delete target;
+	}
 
 	return ret;
 }

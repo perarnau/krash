@@ -90,9 +90,14 @@ extern Cgroup *target;
 extern Cgroup *All;
 
 /** initializes the library,
- * creates the target and All Cgroups
- * moves all tasks to All */
+ * and creates the target cgroup.
+ */
 int init();
+
+/* Creates the All cgroup and
+ * move all tasks in target to it.
+ */
+int install();
 
 /** destroys the groups, move all tasks to target */
 int cleanup();
