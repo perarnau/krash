@@ -32,7 +32,7 @@ static char CPU_SHARES[] = "cpu.shares";
 
 std::string target_path = "/";
 std::string alltasks_groupname = "alltasks";
-
+std::string cpu_mountpoint;
 Cgroup *target = NULL;
 Cgroup *All = NULL;
 
@@ -78,9 +78,11 @@ int Cgroup::lib_detach()
 	 * It fails regularly if one process was killed just before
 	 * it is called.
 	 * So we ask the function to ignore migration errors.
-	 * If it still fails, we consider it an unrecoverable error.
+	 * If it still fails, we retry if the error is Device busy.
 	 */
-	err = cgroup_delete_cgroup(this->cg,1);
+	do {
+		err = cgroup_delete_cgroup(this->cg,1);
+	} while(err == ECGOTHER && errno == EBUSY);
 	SAVE_RET(err,ret);
 	cgroup_free(&this->cg);
 	this->cg = NULL;
@@ -167,10 +169,17 @@ error:
 int init()
 {
 	int err;
+	char *mnt;
 
 	/* init cgroup library */
 	err = cgroup_init();
 	TEST_FOR_ERROR(err,error);
+
+	/* ask for the cpu subsystem mountpoint */
+	err = cgroup_get_subsys_mount_point(CPU_CGROUP_NAME,&mnt);
+	TEST_FOR_ERROR(err,error);
+	cpu_mountpoint = mnt;
+	free(mnt);
 
 	/* create the target group */
 	target = new Cgroup("");
@@ -208,7 +217,7 @@ error:
 	return err;
 }
 
-int cleanup()
+int remove()
 {
 	int err;
 	int ret = 0;
@@ -221,7 +230,13 @@ int cleanup()
 		SAVE_RET(err,ret);
 		delete All;
 	}
+	return ret;
+}
 
+int destroy()
+{
+	int err;
+	int ret = 0;
 	/* delete target */
 	if(target != NULL) {
 		err = target->lib_detach();

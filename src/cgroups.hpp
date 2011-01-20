@@ -35,6 +35,11 @@ extern std::string target_path;
  * This variable determines the created group's name. */
 extern std::string alltasks_groupname;
 
+/* The cpu subsystem mount point. The libcgroup already detect this
+ * for us, and kernel checking code needs it.
+ */
+extern std::string cpu_mountpoint;
+
 /* encapsulates all cgroup operations, using the libcg
  * By default all cgroups created have the cpu controller attached
  * (group scheduling can be manipulated on the group)
@@ -76,11 +81,12 @@ class Cgroup {
 
 		/** sets the cpu.shares value of this cgroup */
 		int set_cpu_shares(u_int64_t val);
+
+		/** the full name of this cgroup */
+		std::string path;
 	private:
 		/** libcg structure associated with this cgroup */
 		struct cgroup *cg;
-		/** the full name of this cgroup */
-		std::string path;
 };
 
 /** this target Cgroup object associated with the target cgroup path */
@@ -99,8 +105,11 @@ int init();
  */
 int install();
 
-/** destroys the groups, move all tasks to target */
-int cleanup();
+/** remove the All group*/
+int remove();
+
+/* destroy target */
+int destroy();
 
 } // end cgroups namespace
 

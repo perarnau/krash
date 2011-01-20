@@ -217,8 +217,11 @@ int cleanup() {
 		// free the structure
 		err = cg->lib_detach();
 		SAVE_RET(err,ret);
-		delete cg;
 	}
+	burners_cgs.clear();
+	burners_pids.clear();
+	burners_watchers.clear();
+	burners_cpus.clear();
 	return ret;
 }
 

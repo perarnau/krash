@@ -23,6 +23,7 @@
 #include <iostream>
 #include <libcgroup.h>
 #include <errno.h>
+#include <cstring>
 /* ERROR POLICY:
  * The fact that libcgroup can fail in a _lot_ of ways means
  * we need to recover errors in a consistent way and let all krash

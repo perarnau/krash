@@ -29,6 +29,7 @@
 #include "profile.hpp"
 #include "cpuinjector.hpp"
 #include "cgroups.hpp"
+#include "check_kernel.hpp"
 
 int install_all(Profile p)
 {
@@ -51,7 +52,7 @@ int clean_all(Profile p)
 	if(p.inject_cpu) {
 		err = cpuinjector::cleanup();
 	}
-	err = err || cgroups::cleanup();
+	err = err || cgroups::remove();
 	err = err || events::cleanup();
 	return err;
 }
@@ -59,20 +60,23 @@ int clean_all(Profile p)
 /* Arguments parsing variables */
 static int ask_help = 0;
 static int ask_version = 0;
+static int kernel_check = 0;
 static struct option long_options[] = {
 	{ "help", no_argument, &ask_help, 1 },
 	{ "version", no_argument, &ask_version, 1 },
+	{ "check-kernel", no_argument, &kernel_check, 1 },
 	{ 0,0,0,0 },
 };
 
-static const char short_opts[] = "hVp:";
+static const char short_opts[] = "hVc";
 
 void print_usage() {
 	std::cout << PACKAGE_NAME << ": a CPU load Injector" << std::endl;
 	std::cout << "Usage: "<< PACKAGE <<" [options] <profile>" << std::endl;
 	std::cout << "options:" << std::endl;
-	std::cout << "-h/--help:    print this help." << std::endl;
-	std::cout << "-V/--version: print krash version." << std::endl;
+	std::cout << "-c/--check-kernel: check for valid kernel on startup." << std::endl;
+	std::cout << "-h/--help:         print this help." << std::endl;
+	std::cout << "-V/--version:      print krash version." << std::endl;
 	std::cout << "Report bugs to: " << PACKAGE_BUGREPORT << std::endl;
 	std::cout << PACKAGE_NAME << " home page: " << PACKAGE_URL << std::endl;
 }
@@ -112,6 +116,9 @@ int main(int argc, char **argv) {
 			case 'h':
 				ask_help = 1;
 				break;
+			case 'c':
+				kernel_check = 1;
+				break;
 			case '?':
 			default:
 				exit(EXIT_FAILURE);
@@ -127,6 +134,8 @@ int main(int argc, char **argv) {
 		print_usage();
 		exit(EXIT_SUCCESS);
 	}
+	argv += optind -1;
+	argc -= optind -1;
 	if(argc != 2) {
 		std::cerr << PACKAGE << ": missing profile" << std::endl;
 		exit(EXIT_FAILURE);
@@ -144,7 +153,19 @@ int main(int argc, char **argv) {
 	std::cout <<"Parsing finished" << std::endl;
 	/* initialize the cgroups */
 	err = cgroups::init();
-	if(err) goto error;
+	if(err) {
+		std::cerr << "Error during libraries initialization, aborting..." << std::endl;
+		goto error_parse;
+	}
+	/* once we have the profile, we can perform checks */
+	if(kernel_check) {
+		std::cout <<"Checking kernel for errors" << std::endl;
+		err = check_kernel();
+		if(err) {
+			std::cerr << "Kernel checking failed, aborting..." << std::endl;
+			goto error_destroy;
+		}
+	}
 	/** setup the system */
 	std::cout << "Installing krash on system" << std::endl;
 	err = install_all(p);
@@ -160,6 +181,7 @@ int main(int argc, char **argv) {
 	std::cout << "Load injection finished, cleaning the system" << std::endl;
 	err = clean_all(p);
 	if(err) goto error_clean;
+	cgroups::destroy();
 	delete driver;
 	exit(EXIT_SUCCESS);
 
@@ -169,6 +191,8 @@ error:
 error_clean:
 		std::cerr << "Warning: errors occurred during cleanup, you should check for any left over processes or configuration." << std::endl;
 	}
+error_destroy:
+	cgroups::destroy();
 error_parse:
 	delete driver;
 	exit(EXIT_FAILURE);
