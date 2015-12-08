@@ -22,7 +22,8 @@
 #include <iostream>
 #include <string>
 #include <cstdlib>
-#include "profile-parser-grammar.h"
+#include "profile.hpp"
+#include "profile-parser-grammar.hh"
 #include "profile-parser-driver.hpp"
 	/* Work around an incompatibility in flex (at least versions
 	   2.5.31 through 2.5.33): it generates code that does

@@ -6,5 +6,5 @@ krash_SOURCES = profile-parser-grammar.yy profile-parser-lex.ll \
 		actions.cpp actions.hpp events.cpp events.hpp utils.cpp utils.hpp \
 		cpuinjector.cpp cpuinjector.hpp profile.hpp cgroups.hpp cgroups.cpp \
 		check_kernel.cpp check_kernel.hpp
-BUILT_SOURCES = profile-parser-grammar.h profile-parser-grammar.cc profile-parser-lex.cc
-CLEANFILES = profile-parser-grammar.h profile-parser-grammar.cc profile-parser-lex.cc
+BUILT_SOURCES = profile-parser-grammar.hh profile-parser-grammar.cc profile-parser-lex.cc
+CLEANFILES = profile-parser-grammar.hh profile-parser-grammar.cc profile-parser-lex.cc
