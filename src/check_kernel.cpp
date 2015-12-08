@@ -31,6 +31,7 @@
 #include "errors.hpp"
 #include "events.hpp"
 #include "utils.hpp"
+#include <unistd.h>
 
 #define REPEATS 20
 
