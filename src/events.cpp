@@ -77,7 +77,7 @@ int start() {
 	// performed.
 	if(!list.empty()) {
 		// set the start time
-		start_time = ev::now();
+		start_time = ev::now(*loop);
 		// init timer with first time deadline
 		Action *a = list.top();
 
@@ -116,7 +116,7 @@ void timer_callback(ev::timer &w,int revents) {
 	std::map< std::string, Action *>todo;
 	int err;
 	// research actions to execute.
-	ev::tstamp now = ev::now() - start_time;
+	ev::tstamp now = ev::now(*loop) - start_time;
 	std::cout << "Wakeup, we have been injecting load for " << now << " seconds" << std::endl;
 	Action *a;
 	while(!list.empty() && list.top()->get_time() <= now) {
